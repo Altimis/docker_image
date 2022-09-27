@@ -36,8 +36,11 @@ api_url = config.url
 username = config.username
 password = config.password
 
+id = config.id.replace('JEB', '')
+key = config.key.replace('JEB', '')
+
 # call s3 bucket
-s3 = boto3.resource('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
+s3 = boto3.resource('s3', aws_access_key_id=id, aws_secret_access_key=key)
 bucket = s3.Bucket(config.BUCKET_NAME)
 
 
@@ -85,7 +88,7 @@ class Scraper:
 
     # main function that sends data to the cloud via API
     def get_items(self):
-        s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
+        s3 = boto3.client('s3', aws_access_key_id=id, aws_secret_access_key=key)
 
         # read the file
 
@@ -625,7 +628,7 @@ class Scraper:
         """
         yield each value of upcs and prices from saved API data (generator)
         """
-        s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
+        s3 = boto3.client('s3', aws_access_key_id=id, aws_secret_access_key=key)
         s3.download_file(config.BUCKET_NAME, 'data/' + ucp_csv_path.split('/')[-1], ucp_csv_path)
         df = pd.read_csv(ucp_csv_path)
         upcs = df.upc.values.tolist()
