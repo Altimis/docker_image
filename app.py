@@ -79,7 +79,7 @@ class Scraper:
             return "'" + upc + "'"
 
     def log_to_file(self, string):
-        #print(string)
+        print(string)
         with open("tmp/logs.txt", "a") as f:
             f.write(string + '/n')
 
