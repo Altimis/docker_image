@@ -96,8 +96,8 @@ RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
 # set display port to avoid crash
 #ENV DISPLAY=:99
-EXPOSE 8080
-ENV PORT 8080
+EXPOSE 80
+ENV PORT 80
 # workdir
 WORKDIR /app
 
