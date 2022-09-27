@@ -581,60 +581,6 @@ class Scraper:
 
         proxy_server = random.choice([proxy_server1, proxy_server2, proxy_server3])
         """
-
-        PROXY_HOST = '216.162.209.41'  # rotating proxy or host
-        PROXY_PORT = 49155  # port
-        PROXY_USER = 'aitjeddiyassine'  # username
-        PROXY_PASS = 'YnYbrgjWgH'  # password
-
-        manifest_json = """
-        {
-            "version": "1.0.0",
-            "manifest_version": 2,
-            "name": "Chrome Proxy",
-            "permissions": [
-                "proxy",
-                "tabs",
-                "unlimitedStorage",
-                "storage",
-                "<all_urls>",
-                "webRequest",
-                "webRequestBlocking"
-            ],
-            "background": {
-                "scripts": ["background.js"]
-            },
-            "minimum_chrome_version":"105.0.0"
-        }
-        """
-
-        background_js = """
-        var config = {
-                mode: "fixed_servers",
-                rules: {
-                singleProxy: {
-                    scheme: "http",
-                    host: "%s",
-                    port: parseInt(%s)
-                },
-                bypassList: ["localhost"]
-                }
-            };
-        chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
-        function callbackFn(details) {
-            return {
-                authCredentials: {
-                    username: "%s",
-                    password: "%s"
-                }
-            };
-        }
-        chrome.webRequest.onAuthRequired.addListener(
-                    callbackFn,
-                    {urls: ["<all_urls>"]},
-                    ['blocking']
-        );
-        """ % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
         while not done and attempt < 6:
             options = uc.ChromeOptions()
             #options.binary_location = 'tmp/headless-chromium'
@@ -642,13 +588,6 @@ class Scraper:
             options.add_argument('--headless')
             #options.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
             options.add_argument("--no-sandbox")
-            import zipfile
-            pluginfile = 'proxy_auth_plugin.zip'
-
-            with zipfile.ZipFile(pluginfile, 'w') as zp:
-                zp.writestr("manifest.json", manifest_json)
-                zp.writestr("background.js", background_js)
-            options.add_extension(pluginfile)
             #options.add_argument("--user-data-dir=~/.config/google-chrome/Default")
             #options.add_argument('--single-process')
             #print("using proxy")
