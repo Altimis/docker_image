@@ -1,0 +1,8 @@
+pandas
+numpy
+requests
+selenium
+undetected_chromedriver
+boto3
+flask
+waitress
