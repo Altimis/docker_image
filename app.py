@@ -595,11 +595,8 @@ class Scraper:
             #options.add_argument('--single-process')
             #print("using proxy")
             #proxy = random.choice(config.proxies)
-            #proxy_server = '68.67.198.95:49155'
-            #proxy_server = "185.33.85.114:49155"
-            proxy_server = '216.162.209.41:49155'
-            if proxy_server:
-                print("using proxy_server : ", proxy_server)
+            if config.proxies:
+                print("using proxy_server : ", random.choice(proxy_server))
                 options.add_argument(f"--proxy-server={proxy_server}")
             #print(config.proxies[0])
             #p = random.choice(config.proxies)
