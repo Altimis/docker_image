@@ -888,8 +888,8 @@ def test():
 
 if __name__ == "__main__":
     #test()
-    main()
-    #app.run(debug=True, host="0.0.0.0", port=8080)
+    #main()
+    app.run(debug=True, host="0.0.0.0", port=8080)
     #scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
     #                  gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
     #driver = scraper.init_driver(proxy_server='185.33.85.114:49155')
