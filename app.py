@@ -654,7 +654,6 @@ class Scraper:
         driver.get("https://www.myexternalip.com/raw")
         sleep(3)
         print(f"[Get IP] {driver.page_source}")
-        return
         self.log_to_file("getting upcs and prices from the API ...")
         len_items = self.get_items()
         if len_items:
