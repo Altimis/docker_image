@@ -649,21 +649,21 @@ class Scraper:
             # self.scrape_gundeals(ucp = upc)
             try:
 
-                #t1 = Thread(target=self.scrape_gundeals, args=(upc,))
-                #t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
-                #t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                #t1.start()
-                #t2.start()
-                #t3.start()
-                #t1.join()
-                #t2.join()
-                #t3.join()
+                t1 = Thread(target=self.scrape_gundeals, args=(upc,))
+                t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
+                t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
+                t1.start()
+                t2.start()
+                t3.start()
+                t1.join()
+                t2.join()
+                t3.join()
 
                 #self.scrape_barcodelookup(upc)
                 ###
-                self.scrape_wikiarms(upc, product_type)
-                self.scrape_gundeals(upc)
-                self.scrape_gunengine(upc, product_type)
+                #self.scrape_wikiarms(upc, product_type)
+                #self.scrape_gundeals(upc)
+                #self.scrape_gunengine(upc, product_type)
                 ###
 
                 self.log_to_file("Scraping 3 websites finished")
