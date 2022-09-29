@@ -141,7 +141,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= total:
+            while i <= 1: #total:
                 params = {
                     "page": i
                 }
@@ -190,7 +190,7 @@ class Scraper:
                     df['price_difference_percent'] = ''
                     df['price_difference_amount'] = ''
 
-                    #df = df.sample(frac=0.5)
+                    df = df.sample(frac=0.2)
 
                     # print(self.ucp_csv_path)
 
@@ -739,10 +739,12 @@ class Scraper:
                 er = traceback.format_exc()
                 self.log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
-
             bucket.upload_file("tmp/logs.txt", "data/logs.txt")
-
-            #return upcs_products
+        
+        self.log_to_file("Session completed")
+        bucket.upload_file("tmp/logs.txt", "data/logs.txt")
+        # Send notification
+            
 
     def remove_duplicates(self, ucp, upcs_products):
         if len(upcs_products) > 0:
