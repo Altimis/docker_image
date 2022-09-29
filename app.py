@@ -556,34 +556,9 @@ class Scraper:
         initiate the undetected chrome driver
         """
         # intitate the driver instance with options and chrome version
-        import os
-        from selenium.common.exceptions import WebDriverException
         attempt = 0
         done = False
-        from selenium import webdriver
-        """
-        s3.download_file(config.BUCKET_NAME, 'layers/proxy.txt', 'tmp/proxy.txt')
-        with open("/tmp/proxy.txt") as f:
-            proxy = f.readlines()
-            proxy = proxy.split(",")
-        proxy_host = proxy[0]
-        proxy_port = proxy[1]
-        """
-        """
-        proxy_host1 = os.environ['PROXY_HOST1']
-        proxy_port1 = os.environ['PROXY_PORT1']
-        proxy_server1 = f"{proxy_host1}:{proxy_port1}"
 
-        proxy_host2 = os.environ['PROXY_HOST2']
-        proxy_port2 = os.environ['PROXY_PORT2']
-        proxy_server2 = f"{proxy_host2}:{proxy_port2}"
-
-        proxy_host3 = os.environ['PROXY_HOST3']
-        proxy_port3 = os.environ['PROXY_PORT3']
-        proxy_server3 = f"{proxy_host3}:{proxy_port3}"
-
-        proxy_server = random.choice([proxy_server1, proxy_server2, proxy_server3])
-        """
         while not done and attempt < 6:
             options = uc.ChromeOptions()
             #options.binary_location = 'tmp/headless-chromium'
@@ -595,9 +570,10 @@ class Scraper:
             #options.add_argument('--single-process')
             #print("using proxy")
             #proxy = random.choice(config.proxies)
-            proxy_server = config.proxies
-            if proxy_server and len(proxy_server):
-                print("using proxy_server : ", random.choice(proxy_server))
+            proxy_servers = config.proxies
+            if proxy_servers and len(proxy_servers):
+                proxy_server = random.choice(proxy_servers)
+                print("using proxy_server : ", proxy_server)
                 options.add_argument(f"--proxy-server={proxy_server}")
             #print(config.proxies[0])
             #p = random.choice(config.proxies)
