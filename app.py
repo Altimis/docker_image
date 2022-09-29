@@ -777,11 +777,11 @@ class Scraper:
         return new_lst
 
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 
 # nth
-@app.route("/")
+#@app.route("/")
 def main():
     try:
         # logging.basicConfig(level=self.log_to_file)
@@ -802,36 +802,7 @@ def main():
         return f"Execution failed: {e}"
 
 
-def test():
-    options = uc.ChromeOptions()
-    #options.add_argument('--headless')
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--no-sandbox")
-    proxy_server = '216.162.209.41:49155'
-    if proxy_server:
-        print("using proxy_server : ", proxy_server)
-        options.add_argument(f"--proxy-server={proxy_server}")
-    #options.add_argument('--single-process')
-    driver = uc.Chrome(options=options)
-    print("got driver")
-    driver.get("https://www.myexternalip.com/raw")
-    sleep(15)
-    print(driver.page_source)
-    driver.get('https://gun.deals/search/apachesolr_search/')
-    sleep(55)
-    print(driver.page_source)
-    driver.close()
-    return "Done"
-
 
 if __name__ == "__main__":
-    #test()
     main()
     #app.run(debug=True, host="0.0.0.0", port=80)
-    #scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
-    #                  gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
-    #driver = scraper.init_driver(proxy_server='185.33.85.114:49155')
-    #driver.get("https://www.myexternalip.com/raw")
-    #sleep(5)
-    #print(driver.page_source)
-
