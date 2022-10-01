@@ -5,6 +5,8 @@ import os
 import numpy as np
 import math
 import config
+from utils import send_email, get_price_from_distributor_items, pad_upc, \
+    log_to_file, init_driver, load_ucps, remove_duplicates
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 import random
@@ -12,6 +14,8 @@ import traceback
 from time import sleep
 
 from threading import Thread
+
+import emails
 
 import csv
 import json
@@ -22,8 +26,8 @@ from datetime import datetime as dt
 
 import warnings
 
-from flask import Flask
-#from waitress import serve
+
+# from waitress import serve
 
 
 ##########
@@ -55,36 +59,7 @@ class Scraper:
         # print("self.gundeals url : ", self.gundeals_url)
         self.failed = False
 
-    def get_price_from_distributor_items(self, lst):
-        prices = []
-        for elt in lst:
-            price = elt['price']
-            if price:
-                prices.append(float(price.replace('$', '').replace(',', '')))
-        if prices:
-            distributor_items_price = np.min(prices)
-            return distributor_items_price
-        else:
-            print("No distributed price found")
-            return
-
     # pad the upc with 0s
-    def pad_upc(self, upc):
-        upc = str(upc)
-        if len(upc) == 12:
-            return "'" + upc + "'"
-        elif len(upc) < 12:
-            pad_n = 12 - len(upc)
-            upc = '0' * pad_n + upc
-            return "'" + upc + "'"
-        else:
-            # print("upc has len : ", len(upc))
-            return "'" + upc + "'"
-
-    def log_to_file(self, string):
-        print(string)
-        with open("tmp/logs.txt", "a") as f:
-            f.write(string + '/n')
 
     # main function that sends data to the cloud via API
     def get_items(self):
@@ -122,18 +97,18 @@ class Scraper:
 
         if is_completed:
             if nothing:
-                self.log_to_file("This is the first scraping session. First csv will be created.")
+                log_to_file("This is the first scraping session. First csv will be created.")
             else:
                 warning_upcs = latest_df[np.abs(latest_df['price_difference_percent']) > config.threshold][
                     'upc'].values.tolist()
-                self.log_to_file(f"Warning for these UPCs : {warning_upcs}")
+                log_to_file(f"Warning for these UPCs : {warning_upcs}")
                 print("Completed.")
-                self.log_to_file("All csvs are completed. Creating a new scraping session.")
+                log_to_file("All csvs are completed. Creating a new scraping session.")
             now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.ucp_csv_path = f"tmp/results_{now}.csv"
         else:
             self.ucp_csv_path = f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
-            self.log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
+            log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
                              f"is not completed. Resuming scraping.")
             return
 
@@ -141,7 +116,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1:  # total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -153,7 +128,7 @@ class Scraper:
                     for elt in response.json()['results']:
                         row = {}
                         # upc
-                        upc = self.pad_upc(elt['upc'])
+                        upc = pad_upc(elt['upc'])
                         if upc:
                             # print("UPC : ", upc)
                             # if upc != "'723189045227'":
@@ -169,7 +144,7 @@ class Scraper:
                         else:
                             row['price'] = None
                         # distributor price
-                        distributor_items_price = self.get_price_from_distributor_items(elt['distributor_items'])
+                        distributor_items_price = get_price_from_distributor_items(elt['distributor_items'])
                         row['distributor_items_price'] = distributor_items_price
                         # print("distributor_items_price : ", distributor_items_price)
                         # category name
@@ -190,7 +165,7 @@ class Scraper:
                     df['price_difference_percent'] = ''
                     df['price_difference_amount'] = ''
 
-                    df = df.sample(frac=0.5)
+                    # df = df.sample(frac=0.2)
 
                     # print(self.ucp_csv_path)
 
@@ -209,7 +184,7 @@ class Scraper:
                     bucket.upload_file(self.ucp_csv_path, 'data/' + self.ucp_csv_path.split('/')[-1])
 
                 else:
-                    self.log_to_file(f'Error getting data' + str(response.json()))
+                    log_to_file(f'Error getting data' + str(response.json()))
 
             # write the time to file
             with open('tmp/timestamps.txt', 'a') as f:
@@ -246,19 +221,19 @@ class Scraper:
         if not f:
             cat_name = 'guns'
         # intiate the driver
-        driver = self.init_driver()
+        driver = init_driver()
         if not driver:
-            self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
+            log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
             self.failed = True
             return
         # get the url
         url = self.wikiarms_url + cat_name + '?q=' + str(ucp)
-        self.log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
+        log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
         try:
             driver.get(url)
         except:
-            err = ""#traceback.format_exc()
-            self.log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
+            err = ""  # traceback.format_exc()
+            log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
                              f"\nError Traceback: {err}")
             driver.close()
             return
@@ -270,16 +245,16 @@ class Scraper:
         try:
             els = driver.find_elements(By.XPATH, "//div[@id='products-table']/table/tbody/tr")
         except Exception as e:
-            err = "" #traceback.format_exc()
-            self.log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
+            err = ""  # traceback.format_exc()
+            log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
                              f"\nError Traceback: ")
             driver.close()
             return
-        self.log_to_file(f"[{scraper_name}] got {len(els)} elements")
+        log_to_file(f"[{scraper_name}] got {len(els)} elements")
         # iterate through all shops
         stores_prices = []
         for j, el in enumerate(els):
-            #print(f"[{scraper_name}] getting element {j}")
+            # print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             try:
                 stroe_name = el.find_elements(By.XPATH, "./td")[-1].text
@@ -292,45 +267,19 @@ class Scraper:
 
             except Exception as e:
                 err = traceback.format_exc()
-                self.log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
+                log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
                                  f"\nError Traceback:")
                 continue
-            """
-            driver2 = self.init_driver()
-            if not driver2:
-                self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
-                store_url = store_href
-            else:
-                try:
-                    driver2.get(store_href)
-                    #store_url = store_href
-                    store_url = driver2.current_url
-                    i = 0
-                    
-                    while store_url == store_href and i < 2:
-                        sleep(0.5)
-                        store_url = driver2.current_url
-                        i += 1
-                    
-                    driver2.close()
-                except Exception as e:
-                    err = traceback.format_exc()
-                    self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
-                                     f"\nError Traceback: {e}")
-                    driver2.close()
-                    store_url = store_href
-                    pass
-            """
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             store_url = store_href
             stores_prices.append((stroe_name, price))
 
         # close the driver
         driver.close()
-        self.log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
+        log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
         # save products for this ucp
         self.upcs_products += stores_prices
-        self.log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
+        log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
 
     def scrape_gunengine(self, ucp, product_type):
         scraper_name = 'gunengine'
@@ -349,19 +298,19 @@ class Scraper:
                 break
         if not f:
             cat_name = 'guns'
-        driver = self.init_driver()
+        driver = init_driver()
         if not driver:
-            self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
+            log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
             self.failed = True
             return
         # get the url
         url = self.gunengine_url + cat_name + '?q=' + str(ucp)
-        self.log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url} for category {cat_name}")
+        log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url} for category {cat_name}")
         try:
             driver.get(url)
         except:
             err = traceback.format_exc()
-            self.log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
+            log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
                              f"\nError Traceback: ")
             driver.close()
             return
@@ -377,11 +326,11 @@ class Scraper:
         # continue if 0 products found
         if found:
             if int(re.search(r'\d+', found).group()) == 0:
-                self.log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
+                log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
                 driver.close()
                 return
         else:
-            self.log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
+            log_to_file(f"[{scraper_name}] 0 results found for ucp : {ucp}")
             driver.close()
             return
 
@@ -389,7 +338,7 @@ class Scraper:
         try:
             driver.find_element(By.XPATH, f'//*[@id="upc{ucp}"]/a').click()
         except Exception as e:
-            self.log_to_file(f"[{scraper_name}] Couldn't get all results for UPC {ucp}")
+            log_to_file(f"[{scraper_name}] Couldn't get all results for UPC {ucp}")
 
         sleep(random.uniform(0.5, 1))
         # get stores elements
@@ -397,14 +346,14 @@ class Scraper:
             variant_els = driver.find_elements(By.XPATH, "//div[@class='variant']")
         except Exception as e:
             err = traceback.format_exc()
-            self.log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
+            log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
                              f"\nError Traceback:")
             driver.close()
             return
         # iterate through all shops
         stores_prices = []
         for j, variant_el in enumerate(variant_els):
-            #print(f"[{scraper_name}] getting element {j}")
+            # print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             try:
                 price = float(variant_el.find_element(
@@ -415,45 +364,19 @@ class Scraper:
                     By.XPATH, "./div[1]/a[1]/span[@class='variant-store']").text
             except Exception as e:
                 err = traceback.format_exc()
-                self.log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
+                log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
                                  f"\nError Traceback: {e}")
                 continue
-            """
-            driver2 = self.init_driver()
-            if not driver2:
-                self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
-                store_url = store_href
-            else:
-                try:
-                    driver2.get(store_href)
-                    #store_url = store_href
-                    store_url = driver2.current_url
-                    i = 0
-                    
-                    while store_url == store_href and i < 2:
-                        sleep(0.5)
-                        store_url = driver2.current_url
-                        i += 1
-                    
-                    driver2.close()
-                except:
-                    err = traceback.format_exc()
-                    self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
-                                     f"\nError Traceback: {err}")
-                    driver2.close()
-                    store_url = store_href
-                    pass
-            """
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             store_url = store_href
             stores_prices.append((store_name, price))
 
         # close the driver
         driver.close()
-        self.log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
+        log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
         # save productsUnnamed: 0 for this ucp
         self.upcs_products += stores_prices
-        self.log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
+        log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
 
     def scrape_gundeals(self, ucp):
         """
@@ -464,33 +387,33 @@ class Scraper:
         ucp = ucp.replace("'", "")
         stores_prices = []
         # intiate the driver
-        driver = self.init_driver()
+        driver = init_driver()
         if not driver:
-            self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
+            log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
             self.failed = True
             return
         # get the url
         url = self.gundeals_url + str(ucp)
-        self.log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
+        log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
         try:
             driver.get(url)
             print("got gundeals url")
         except:
             err = traceback.format_exc()
-            self.log_to_file(f"There was an issue getting the url : {url}"
+            log_to_file(f"There was an issue getting the url : {url}"
                              f"\nError Traceback: {err}")
             driver.close()
             return
         sleep(random.uniform(1, 2))
 
-        #print(driver.page_source)
+        # print(driver.page_source)
 
         # get products elements
         try:
             els = driver.find_elements(By.XPATH, "//table[@id='price-compare-table']/tbody/tr")
         except Exception as e:
             err = traceback.format_exc()
-            self.log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
+            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
                              f"\nError Traceback: {e}")
             driver.close()
             return
@@ -499,10 +422,10 @@ class Scraper:
         stores_prices = []
         print(f"got {len(els)} elements for gundeals")
         for j, el in enumerate(els):
-            #print(f"[{scraper_name}] getting element {j}")
+            # print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             if 'out of stock' in el.text.lower():
-                self.log_to_file(f"[{scraper_name}] out of stock found")
+                log_to_file(f"[{scraper_name}] out of stock found")
                 break
             try:
                 price = el.get_attribute('data-price')
@@ -511,185 +434,64 @@ class Scraper:
                 store_name = el.find_element(By.XPATH, './/td[1]/div[1]/a[1]/span').text
             except Exception as e:
                 err = traceback.format_exc()
-                self.log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
+                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
                                  f"\nError Traceback: {e}")
                 continue
-            """
-            driver2 = self.init_driver()
-            if not driver2:
-                self.log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
-                store_url = store_href
-            else:
-                try:
-                    driver2.get(store_href)
-                    #store_url = store_href
-                    store_url = driver2.current_url
-                    i = 0
-                    
-                    while store_url == store_href and i < 2:
-                        sleep(0.5)
-                        store_url = driver2.current_url
-                        i += 1
-                    
-                    driver2.close()
-                except:
-                    err = traceback.format_exc()
-                    self.log_to_file(f"[{scraper_name}] There was an issue getting the store href : {store_href}"
-                                     f"\nError Traceback: {err}")
-                    store_url = store_href
-                    pass
-            """
-            # self.log_to_file(f"price : {price}, store_url : {store_url}")
             store_url = store_href
             stores_prices.append((store_name, price))
 
         # close the driver
         driver.close()
         # break
-        self.log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
+        log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
         # save products for this ucp
         self.upcs_products += stores_prices
-        self.log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
-
-    def init_driver(self, is_proxy=False, proxy=None, proxy_server=None):
-        """
-        initiate the undetected chrome driver
-        """
-        # intitate the driver instance with options and chrome version
-        import os
-        from selenium.common.exceptions import WebDriverException
-        attempt = 0
-        done = False
-        from selenium import webdriver
-        """
-        s3.download_file(config.BUCKET_NAME, 'layers/proxy.txt', 'tmp/proxy.txt')
-        with open("/tmp/proxy.txt") as f:
-            proxy = f.readlines()
-            proxy = proxy.split(",")
-        proxy_host = proxy[0]
-        proxy_port = proxy[1]
-        """
-        """
-        proxy_host1 = os.environ['PROXY_HOST1']
-        proxy_port1 = os.environ['PROXY_PORT1']
-        proxy_server1 = f"{proxy_host1}:{proxy_port1}"
-
-        proxy_host2 = os.environ['PROXY_HOST2']
-        proxy_port2 = os.environ['PROXY_PORT2']
-        proxy_server2 = f"{proxy_host2}:{proxy_port2}"
-
-        proxy_host3 = os.environ['PROXY_HOST3']
-        proxy_port3 = os.environ['PROXY_PORT3']
-        proxy_server3 = f"{proxy_host3}:{proxy_port3}"
-
-        proxy_server = random.choice([proxy_server1, proxy_server2, proxy_server3])
-        """
-        while not done and attempt < 6:
-            options = uc.ChromeOptions()
-            #options.binary_location = 'tmp/headless-chromium'
-            #options.add_argument('--no-first-run --no-service-autorun')
-            options.add_argument('--headless')
-            #options.arguments.extend(["--no-sandbox", "--disable-setuid-sandbox"])
-            options.add_argument("--no-sandbox")
-            #options.add_argument("--user-data-dir=~/.config/google-chrome/Default")
-            #options.add_argument('--single-process')
-            #print("using proxy")
-            #proxy = random.choice(config.proxies)
-            if config.proxies:
-                print("using proxy_server : ", random.choice(proxy_server))
-                options.add_argument(f"--proxy-server={proxy_server}")
-            #print(config.proxies[0])
-            #p = random.choice(config.proxies)
-            #proxy = f'{"103.125.12.9"}:{"8080"}'
-
-            #options.add_argument(f'--proxy-server={proxy}')
-            options.add_argument("--disable-dev-shm-usage")
-            #options.add_argument("--incognito")
-            #options.add_argument("user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4919.0 Safari/537.36")
-            #chrome_prefs = {}
-            #options.experimental_options["prefs"] = chrome_prefs
-            #chrome_prefs["profile.default_content_settings"] = {"images": 2}
-            try:  # will patch to newest Chrome driver version
-                #print("getting driver")
-                driver = uc.Chrome(options=options)
-                print("got driver")
-                done = True
-            except Exception as e:  # newest driver version not matching Chrome version
-                err = traceback.format_exc()
-                print("couldn't get driver : ")
-                attempt += 1
-
-        return driver
-
-    def load_ucps(self, ucp_csv_path):
-        """
-        yield each value of upcs and prices from saved API data (generator)
-        """
-        s3 = boto3.client('s3', aws_access_key_id=id, aws_secret_access_key=key)
-        s3.download_file(config.BUCKET_NAME, 'data/' + ucp_csv_path.split('/')[-1], ucp_csv_path)
-        df = pd.read_csv(ucp_csv_path)
-        upcs = df.upc.values.tolist()
-        prices = df.price.values.tolist()
-        target_prices = df.target_price.values.tolist()
-        price_difference_percents = df.price_difference_percent.values.tolist()
-        price_difference_amounts = df.price_difference_amount.values.tolist()
-        product_types = df.product_type.values.tolist()
-
-        for upc, price, target_price, price_difference_percent, price_difference_amount, product_type in zip(
-                upcs, prices, target_prices, price_difference_percents, price_difference_amounts, product_types):
-            if (math.isnan(target_price) or
-                    math.isnan(price_difference_percent) or
-                    math.isnan(price_difference_amount)):
-                yield upc, price, product_type
+        log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
 
     def scrape_all(self):
         """
 
         """
         # yielding upcs
-        driver = self.init_driver()
-        driver.get("https://www.myexternalip.com/raw")
-        sleep(3)
-        print(f"[Get IP] {driver.page_source}")
-        self.log_to_file("getting upcs and prices from the API ...")
+        log_to_file("getting upcs and prices from the API ...")
         len_items = self.get_items()
         if len_items:
-            self.log_to_file(f"Got {len_items}")
+            log_to_file(f"Got {len_items}")
         else:
-            self.log_to_file("an uncompleted csv file already exists")
+            log_to_file("an uncompleted csv file already exists")
 
-        upcs_prices_generator = self.load_ucps(self.ucp_csv_path)
+        upcs_prices_generator = load_ucps(self.ucp_csv_path)
 
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
-            self.log_to_file(f"scraping for upc {upc} and price {price} ...")
+            log_to_file(f"scraping for upc {upc} and price {price} ...")
             self.upcs_products = []
             # Scraping starts
-            self.log_to_file("Scraping 3 websites started")
+            log_to_file("Scraping 3 websites started")
             # self.scrape_gundeals(ucp = upc)
             try:
 
-                #t1 = Thread(target=self.scrape_gundeals, args=(upc,))
-                #t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
-                #t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                #t1.start()
-                #t2.start()
-                #t3.start()
-                #t1.join()
-                #t2.join()
-                #t3.join()
+                t1 = Thread(target=self.scrape_gundeals, args=(upc,))
+                t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
+                t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
+                t1.start()
+                t2.start()
+                t3.start()
+                t1.join()
+                t2.join()
+                t3.join()
 
-                #self.scrape_barcodelookup(upc)
+                # self.scrape_barcodelookup(upc)
                 ###
-                self.scrape_wikiarms(upc, product_type)
-                self.scrape_gundeals(upc)
-                self.scrape_gunengine(upc, product_type)
+                # self.scrape_wikiarms(upc, product_type)
+                # self.scrape_gundeals(upc)
+                # self.scrape_gunengine(upc, product_type)
                 ###
 
-                self.log_to_file("Scraping 3 websites finished")
-                self.log_to_file("Checking duplicates")
-                upcs_products = self.remove_duplicates(upc, self.upcs_products)
+                log_to_file("Scraping 3 websites finished")
+                log_to_file("Checking duplicates")
+                upcs_products = remove_duplicates(upc, self.upcs_products)
 
                 json_upcs_products[upc.replace("'", '')] = [l for l in upcs_products]
 
@@ -708,14 +510,14 @@ class Scraper:
                     diff_perc = np.abs(round(target / float(price) - 1, 3))
                     diff_amount = np.abs(price - target)
                 elif not self.failed:
-                    self.log_to_file(
+                    log_to_file(
                         f"Target price and difference price will be inserted as N/A. No prices were scraped.")
                     scraped_prices = []
                     target = 'N/A'
                     diff_perc = 'N/A'
                     diff_amount = 'N/A'
                 else:
-                    self.log_to_file(
+                    log_to_file(
                         f"There was a fatal issue initiating one of the driver. Nothing will be inserted for upc {upc} and scraping will be resumed for another session.")
                     continue
 
@@ -730,13 +532,7 @@ class Scraper:
                             writer.writerow(line)
                             continue
                         if line[0] == upc:
-                            # self.log_to_file(f"inserting stats for upc {upc}...")
-                            # self.log_to_file("target price : ", target)
-                            # self.log_to_file("difference percentage : ", diff_perc)
-                            # self.log_to_file("difference amount : ", diff_amount)
-                            self.log_to_file(f"Target price : {target} inserted for the price {price}")
-                            # print("processed : ", True)
-                            # line[4] = 1
+                            log_to_file(f"Target price : {target} inserted for the price {price}")
                             if target != 'N/A':
                                 line[5] = round(target, 3)
                                 line[6] = diff_perc
@@ -746,53 +542,35 @@ class Scraper:
                                 line[6] = diff_perc
                                 line[7] = diff_amount
                             writer.writerow(line)
-                            # print(line)
-                            # break
                         else:
                             writer.writerow(line)
                     writer.writerows(reader)
 
                 bucket.upload_file(self.ucp_csv_path, 'data/' + self.ucp_csv_path.split('/')[-1])
-                self.log_to_file(
+                log_to_file(
                     f"Finished processing upc {upc} with target price : {target} and difference percentage : {diff_perc}")
 
             except Exception as e:
                 er = traceback.format_exc()
-                self.log_to_file("A major problem occured in one of the scrapers : " + str(er))
+                log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
-
             bucket.upload_file("tmp/logs.txt", "data/logs.txt")
 
-            #return upcs_products
-
-    def remove_duplicates(self, ucp, upcs_products):
-        if len(upcs_products) > 0:
-            new_lst = [t for t in tuple((set(tuple(i) for i in upcs_products)))]
-            print(
-                f"{len(upcs_products) - len(new_lst)} duplicated products removed from {len(upcs_products)} products for ucp {ucp}.")
-        else:
-            self.log_to_file(f"upcs_products is empty. 0 products scraped from the 3 websites for upc {ucp}")
-            new_lst = []
-
-        return new_lst
+        log_to_file("Session completed")
+        bucket.upload_file("tmp/logs.txt", "data/logs.txt")
+        # Send notification
+        # send_email(from_=None, to_=None, subject="End of session", text="The session <timestamp> has ended")
+        # if warning_upcs:
+        #     send_email(from_=None, to_=None, subject="Warning", text="Warning for upcs : <>")
 
 
-app = Flask(__name__)
-
+# app = Flask(__name__)
 
 # nth
-@app.route("/")
+# @app.route("/")
 def main():
     try:
-        # logging.basicConfig(level=self.log_to_file)
         open("tmp/logs.txt", "w").close()
-        #print("downloading chromedriver")
-        #s3 = boto3.client('s3', aws_access_key_id=config.ACCESS_ID, aws_secret_access_key=config.ACCESS_KEY)
-        #s3.download_file(config.BUCKET_NAME, 'layers/chromedriver', 'tmp/chromedriver')
-        #s3.download_file(config.BUCKET_NAME, 'layers/headless-chromium', 'tmp/headless-chromium')
-        #os.chmod("tmp/chromedriver", 0o777)
-        #os.chmod("tmp/headless-chromium", 0o777)
-
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
         scraper.scrape_all()
@@ -802,36 +580,6 @@ def main():
         return f"Execution failed: {e}"
 
 
-def test():
-    options = uc.ChromeOptions()
-    #options.add_argument('--headless')
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--no-sandbox")
-    proxy_server = '216.162.209.41:49155'
-    if proxy_server:
-        print("using proxy_server : ", proxy_server)
-        options.add_argument(f"--proxy-server={proxy_server}")
-    #options.add_argument('--single-process')
-    driver = uc.Chrome(options=options)
-    print("got driver")
-    driver.get("https://www.myexternalip.com/raw")
-    sleep(15)
-    print(driver.page_source)
-    driver.get('https://gun.deals/search/apachesolr_search/')
-    sleep(55)
-    print(driver.page_source)
-    driver.close()
-    return "Done"
-
-
 if __name__ == "__main__":
-    #test()
     main()
-    #app.run(debug=True, host="0.0.0.0", port=80)
-    #scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
-    #                  gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
-    #driver = scraper.init_driver(proxy_server='185.33.85.114:49155')
-    #driver.get("https://www.myexternalip.com/raw")
-    #sleep(5)
-    #print(driver.page_source)
-
+    # app.run(debug=True, host="0.0.0.0", port=80)
