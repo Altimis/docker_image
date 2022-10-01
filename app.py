@@ -15,8 +15,6 @@ from time import sleep
 
 from threading import Thread
 
-import emails
-
 import csv
 import json
 
@@ -298,7 +296,7 @@ class Scraper:
                 break
         if not f:
             cat_name = 'guns'
-        driver = init_driver()
+        driver =/home/yassine/Documents/upwork/docker_image init_driver()
         if not driver:
             log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
             self.failed = True
@@ -510,7 +508,7 @@ class Scraper:
                     diff_perc = np.abs(round(target / float(price) - 1, 3))
                     diff_amount = np.abs(price - target)
                 elif not self.failed:
-                    log_to_file(
+                    self.log_to_file(
                         f"Target price and difference price will be inserted as N/A. No prices were scraped.")
                     scraped_prices = []
                     target = 'N/A'
