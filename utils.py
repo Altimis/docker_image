@@ -92,7 +92,7 @@ def load_ucps(ucp_csv_path):
     """
     yield each value of upcs and prices from saved API data (generator)
     """
-    s3 = boto3.client('s3', aws_access_key_id=id, aws_secret_access_key=key)
+    s3 = boto3.client('s3')
     s3.download_file(config.BUCKET_NAME, 'data/' + ucp_csv_path.split('/')[-1], ucp_csv_path)
     df = pd.read_csv(ucp_csv_path)
     upcs = df.upc.values.tolist()
