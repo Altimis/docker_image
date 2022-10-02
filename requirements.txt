@@ -6,3 +6,4 @@ undetected_chromedriver
 boto3
 flask
 waitress
+emails

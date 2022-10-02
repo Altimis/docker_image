@@ -38,8 +38,8 @@ api_url = config.url
 username = config.username
 password = config.password
 
-id = config.id.replace('JEB', '')
-key = config.key.replace('JEB', '')
+#id = config.id.replace('JEB', '')
+#key = config.key.replace('JEB', '')
 
 # call s3 bucket
 s3 = boto3.resource('s3')
