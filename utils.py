@@ -24,6 +24,35 @@ from datetime import datetime as dt
 
 import warnings
 
+
+def send_plain_email():
+    ses_client = boto3.client("ses", region_name="us-west-2")
+    CHARSET = "UTF-8"
+
+    response = ses_client.send_email(
+        Destination={
+            "ToAddresses": [
+                "lennonzamora@ranheimarms.com",
+            ],
+        },
+        Message={
+            "Body": {
+                "Text": {
+                    "Charset": CHARSET,
+                    "Data": "Hello, world",
+                }
+            },
+            "Subject": {
+                "Charset": CHARSET,
+                "Data": "Subject Test",
+            },
+        },
+        Source="pricegrabber@ranheimarms.com",
+    )
+
+    print(response)
+
+
 def get_price_from_distributor_items(lst):
     prices = []
     for elt in lst:

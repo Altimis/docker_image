@@ -508,7 +508,7 @@ class Scraper:
                     diff_perc = np.abs(round(target / float(price) - 1, 3))
                     diff_amount = np.abs(price - target)
                 elif not self.failed:
-                    self.log_to_file(
+                    log_to_file(
                         f"Target price and difference price will be inserted as N/A. No prices were scraped.")
                     scraped_prices = []
                     target = 'N/A'
@@ -581,5 +581,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    from utils import send_plain_email
+    send_plain_email()
+    #main()
     # app.run(debug=True, host="0.0.0.0", port=80)
