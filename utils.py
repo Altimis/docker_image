@@ -24,36 +24,6 @@ from datetime import datetime as dt
 
 import warnings
 
-
-def send_email(from_=None, to_=None, subject=None, text=None):
-    """
-
-    :return:
-    """
-    # Prepare the email
-    message = emails.html(
-        html="<h1>My message</h1><strong>I've got something to tell you!</strong>", # text
-        subject="A very important message", # subject
-        mail_from="pricegrabber@ranheimarms.com", # _from
-    )
-
-    # Send the email
-    r = message.send(
-        to="lennonzamora@ranheimarms.com", # to_
-        smtp={
-            "host": "email-smtp.us-east-2.amazonaws.com", # config.smtp_host
-            "port": 2587, # config.smtp_port
-            "timeout": 5,
-            "user": "AKIAQAHKUCVULQQSUG2F", # config.smtp_user
-            "password": "BPsMpt+U/69iepvTLCCNaTINw5UrBzzm7FCOK/BALevY", # config.smtp_pass
-            "tls": True,
-        },
-    )
-    print(r.status_code)
-    # Check if the email was properly sent
-    assert r.status_code == 250
-
-
 def get_price_from_distributor_items(lst):
     prices = []
     for elt in lst:

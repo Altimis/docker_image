@@ -5,7 +5,7 @@ import os
 import numpy as np
 import math
 import config
-from utils import send_email, get_price_from_distributor_items, pad_upc, \
+from utils import get_price_from_distributor_items, pad_upc, \
     log_to_file, init_driver, load_ucps, remove_duplicates
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
@@ -42,7 +42,7 @@ id = config.id.replace('JEB', '')
 key = config.key.replace('JEB', '')
 
 # call s3 bucket
-s3 = boto3.resource('s3', aws_access_key_id=id, aws_secret_access_key=key)
+s3 = boto3.resource('s3')
 bucket = s3.Bucket(config.BUCKET_NAME)
 
 
@@ -61,7 +61,7 @@ class Scraper:
 
     # main function that sends data to the cloud via API
     def get_items(self):
-        s3 = boto3.client('s3', aws_access_key_id=id, aws_secret_access_key=key)
+        s3 = boto3.client('s3')
 
         # read the file
 
@@ -296,7 +296,7 @@ class Scraper:
                 break
         if not f:
             cat_name = 'guns'
-        driver =/home/yassine/Documents/upwork/docker_image init_driver()
+        driver = init_driver()
         if not driver:
             log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver intialization!")
             self.failed = True
@@ -556,10 +556,12 @@ class Scraper:
 
         log_to_file("Session completed")
         bucket.upload_file("tmp/logs.txt", "data/logs.txt")
+        warning_upcs = False
         # Send notification
-        # send_email(from_=None, to_=None, subject="End of session", text="The session <timestamp> has ended")
-        # if warning_upcs:
-        #     send_email(from_=None, to_=None, subject="Warning", text="Warning for upcs : <>")
+        #send_email(from_=None, to_=None, subject="End of session", text="The session <timestamp> has ended")
+        if warning_upcs:
+            pass
+            #send_email(from_=None, to_=None, subject="Warning", text="Warning for upcs : <>")
 
 
 # app = Flask(__name__)
