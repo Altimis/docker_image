@@ -391,7 +391,6 @@ class Scraper:
         log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
         try:
             driver.get(url)
-            print("got gundeals url")
         except:
             err = traceback.format_exc()
             log_to_file(f"There was an issue getting the url : {url}"
@@ -458,7 +457,6 @@ class Scraper:
         log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
         try:
             driver.get(url)
-            print("got gundeals url")
         except:
             err = traceback.format_exc()
             log_to_file(f"There was an issue getting the url : {url}"
@@ -537,7 +535,7 @@ class Scraper:
                 t1.join()
                 t2.join()
                 t3.join()
-                t4.start()
+                t4.join()
 
                 # self.scrape_barcodelookup(upc)
                 ###
