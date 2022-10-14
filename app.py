@@ -112,7 +112,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1: #total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -163,7 +163,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    df = df.sample(frac=0.5)
+                    #df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
