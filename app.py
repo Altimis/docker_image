@@ -529,7 +529,7 @@ class Scraper:
                 t1 = Thread(target=self.scrape_gundeals, args=(upc,))
                 t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                t4 = Thread(target=self.scrape_barcodelookup, args=upc)
+                t4 = Thread(target=self.scrape_barcodelookup, args=(upc,))
                 t1.start()
                 t2.start()
                 t3.start()
