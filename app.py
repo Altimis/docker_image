@@ -685,5 +685,8 @@ if __name__ == "__main__":
     # remove all files in tmp dir
     files = glob.glob('/tmp/*')
     for f in files:
-        os.remove(f)
+        try:
+            os.remove(f)
+        except:
+            continue
     main()
