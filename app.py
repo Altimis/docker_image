@@ -452,6 +452,7 @@ class Scraper:
 
         """
         # yielding upcsself.ucp_csv_path
+        s3 = boto3.client('s3')
         log_to_file("getting upcs and prices from the API ...")
         len_items = self.get_items()
         if len_items:
@@ -524,7 +525,7 @@ class Scraper:
                         f"There was a fatal issue initiating one of the driver. Nothing will be inserted for upc {upc} and scraping will be resumed for another session.")
                     continue
                 #s3 = boto3.client('s3')
-                bucket.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+                s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
                                  self.ucp_csv_path)
 
                 with open(self.ucp_csv_path) as inf:
@@ -570,7 +571,7 @@ class Scraper:
         bucket.upload_file("tmp/logs.txt", "data/logs.txt")
         warning_upcs = False
         # Send warning
-        bucket.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+        s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
                          self.ucp_csv_path)
         df_f = pd.read_csv(self.ucp_csv_path)
         df_warning = df_f[df_f['price_difference_percent'] > config.threshold]
