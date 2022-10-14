@@ -110,7 +110,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= total:
+            while i <= 1: #total:
                 params = {
                     "page": i
                 }
@@ -161,7 +161,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    # df = df.sample(frac=0.5)
+                    df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -635,9 +635,26 @@ class Scraper:
                          self.ucp_csv_path)
         df_f = pd.read_csv(self.ucp_csv_path)
         df_warning = df_f[df_f['price_difference_percent'] > config.threshold]
-        if len(df_warning):
-            warning_text = f"Difference percentage bigger than {config.threshold} found for the following upcs:\n" \
-                           f"{tabulate(df_warning[['upc', 'price_difference_percent', 'price', 'target_price']], headers='keys', tablefmt='psql')}"
+        len_df_warning = len(df_warning)
+        warning_df_name = self.ucp_csv_path.split('/')[-1].replace('results', 'warning')
+        if 0 < len_df_warning <= 200:
+            df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
+            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
+            bucket.upload_file(f"tmp/{warning_df_name}", f"data/{warning_df_name}")
+            warning_text = f"{len_df_warning} prices with difference percentage bigger than {config.threshold} " \
+                           f"found for the following upcs:\n" \
+                           f"{tabulate(df_warning_to_save, headers='keys', tablefmt='psql')}"
+            send_plain_email(subject=f"[End of Session with WARNING] session : "
+                                     f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
+                             text=warning_text)
+            log_to_file(f"Warning sent : {warning_text}")
+        elif len_df_warning > 200:
+            df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
+            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
+            bucket.upload_file(f"tmp/{warning_df_name}", f"data/{warning_df_name}")
+            warning_text = f"{len_df_warning} prices with difference percentage bigger than {config.threshold} " \
+                           f"found. You can find the csv related to these prices in the main S3 bucket with the name:" \
+                           f" {warning_df_name}"
             send_plain_email(subject=f"[End of Session with WARNING] session : "
                                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
                              text=warning_text)
