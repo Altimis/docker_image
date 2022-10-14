@@ -110,7 +110,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1:#total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -161,7 +161,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    df = df.sample(frac=0.5)
+                    # df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -527,15 +527,15 @@ class Scraper:
                 t1 = Thread(target=self.scrape_gundeals, args=(upc,))
                 t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
-                t4 = Thread(target=self.scrape_barcodelookup, args=(upc,))
+                #t4 = Thread(target=self.scrape_barcodelookup, args=(upc,))
                 t1.start()
                 t2.start()
                 t3.start()
-                t4.start()
+                #t4.start()
                 t1.join()
                 t2.join()
                 t3.join()
-                t4.join()
+                #t4.join()
 
                 # self.scrape_barcodelookup(upc)
                 ###
