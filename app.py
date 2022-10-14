@@ -615,10 +615,14 @@ def main():
 if __name__ == "__main__":
     from utils import send_plain_email
 
+    open('tmp/timestamps.txt', 'w').close()
+    #s3_client = boto3.client("s3")
+    #s3_client.download_file(config.BUCKET_NAME, 'layers/timestamps.txt', 'tmp/timestamps.txt')
+    bucket.upload_file('tmp/timestamps.txt', 'layers/timestamps.txt')
 
-    s3_client = boto3.client("s3")
-    r = s3_client.delete_object(Bucket=config.BUCKET_NAME, Key="data/results_2022-09-29_01-51-08.csv")
-    print("deleted : ", r)
+    #r = s3_client.delete_object(Bucket=config.BUCKET_NAME, Key="data/results_2022-09-29_01-51-08.csv")
+    #print("deleted : ", r)
+
 
     # send_plain_email()
 
