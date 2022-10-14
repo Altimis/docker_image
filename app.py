@@ -615,6 +615,12 @@ def main():
 if __name__ == "__main__":
     from utils import send_plain_email
 
+
+    s3_client = boto3.client("s3")
+    r = s3_client.delete_object(Bucket=config.BUCKET_NAME, Key="data/results_2022-09-29_01-51-08.csv")
+    print("deleted : ", r)
+
     # send_plain_email()
+
     main()
     # app.run(debug=True, host="0.0.0.0", port=80)
