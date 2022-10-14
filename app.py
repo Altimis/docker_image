@@ -544,14 +544,20 @@ class Scraper:
                                 line[5] = round(target, 3)
                                 line[6] = diff_perc
                                 line[7] = round(diff_amount, 3)
-                                line[8] = round(price_min, 2)
-                                line[9] = round(price_max, 2)
+                                try:
+                                    line[8] = round(price_min, 2)
+                                    line[9] = round(price_max, 2)
+                                except:
+                                    pass
                             else:
                                 line[5] = target
                                 line[6] = diff_perc
                                 line[7] = diff_amount
-                                line[8] = price_min
-                                line[9] = price_max
+                                try:
+                                    line[8] = price_min
+                                    line[9] = price_max
+                                except:
+                                    pass
                             writer.writerow(line)
                         else:
                             writer.writerow(line)
