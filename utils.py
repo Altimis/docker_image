@@ -25,29 +25,29 @@ from datetime import datetime as dt
 import warnings
 
 
-def send_plain_email():
+def send_plain_email(subject, text):
     ses_client = boto3.client("ses", region_name="us-east-2")
     CHARSET = "UTF-8"
 
     response = ses_client.send_email(
         Destination={
             "ToAddresses": [
-                "lennonzamora@ranheimarms.com",
+                config.email_to,
             ],
         },
         Message={
             "Body": {
                 "Text": {
                     "Charset": CHARSET,
-                    "Data": "Hello, world",
+                    "Data": text,
                 }
             },
             "Subject": {
                 "Charset": CHARSET,
-                "Data": "Subject Test",
+                "Data": subject,
             },
         },
-        Source="pricegrabber@ranheimarms.com",
+        Source=config.email_from,
     )
 
     print(response)

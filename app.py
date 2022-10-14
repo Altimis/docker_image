@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 import random
 import traceback
 from time import sleep
-
+from tabulate import tabulate
 from threading import Thread
 
 import csv
@@ -23,7 +23,6 @@ import requests
 from datetime import datetime as dt
 
 import warnings
-
 
 # from waitress import serve
 
@@ -38,8 +37,8 @@ api_url = config.url
 username = config.username
 password = config.password
 
-#id = config.id.replace('JEB', '')
-#key = config.key.replace('JEB', '')
+# id = config.id.replace('JEB', '')
+# key = config.key.replace('JEB', '')
 
 # call s3 bucket
 s3 = boto3.resource('s3')
@@ -107,14 +106,14 @@ class Scraper:
         else:
             self.ucp_csv_path = f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
-                             f"is not completed. Resuming scraping.")
+                        f"is not completed. Resuming scraping.")
             return
 
         to_return = []
         try:
             i = 1
             total = 1
-            while i <= total:
+            while i <= 1: #total:
                 params = {
                     "page": i
                 }
@@ -162,8 +161,10 @@ class Scraper:
                     df['target_price'] = ''
                     df['price_difference_percent'] = ''
                     df['price_difference_amount'] = ''
+                    df['price_min'] = ''
+                    df['price_max'] = ''
 
-                    # df = df.sample(frac=0.2)
+                    df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -232,7 +233,7 @@ class Scraper:
         except:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
-                             f"\nError Traceback: {err}")
+                        f"\nError Traceback: {err}")
             driver.close()
             return
         # sleep(random.uniform(, 6))
@@ -245,7 +246,7 @@ class Scraper:
         except Exception as e:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
-                             f"\nError Traceback: ")
+                        f"\nError Traceback: ")
             driver.close()
             return
         log_to_file(f"[{scraper_name}] got {len(els)} elements")
@@ -266,7 +267,7 @@ class Scraper:
             except Exception as e:
                 err = traceback.format_exc()
                 log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
-                                 f"\nError Traceback:")
+                            f"\nError Traceback:")
                 continue
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             store_url = store_href
@@ -309,7 +310,7 @@ class Scraper:
         except:
             err = traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
-                             f"\nError Traceback: ")
+                        f"\nError Traceback: ")
             driver.close()
             return
         sleep(random.uniform(0.5, 1))
@@ -345,7 +346,7 @@ class Scraper:
         except Exception as e:
             err = traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
-                             f"\nError Traceback:")
+                        f"\nError Traceback:")
             driver.close()
             return
         # iterate through all shops
@@ -363,7 +364,7 @@ class Scraper:
             except Exception as e:
                 err = traceback.format_exc()
                 log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
-                                 f"\nError Traceback: {e}")
+                            f"\nError Traceback: {e}")
                 continue
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             store_url = store_href
@@ -399,7 +400,7 @@ class Scraper:
         except:
             err = traceback.format_exc()
             log_to_file(f"There was an issue getting the url : {url}"
-                             f"\nError Traceback: {err}")
+                        f"\nError Traceback: {err}")
             driver.close()
             return
         sleep(random.uniform(1, 2))
@@ -412,7 +413,7 @@ class Scraper:
         except Exception as e:
             err = traceback.format_exc()
             log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
-                             f"\nError Traceback: {e}")
+                        f"\nError Traceback: {e}")
             driver.close()
             return
 
@@ -433,7 +434,7 @@ class Scraper:
             except Exception as e:
                 err = traceback.format_exc()
                 log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
-                                 f"\nError Traceback: {e}")
+                            f"\nError Traceback: {e}")
                 continue
             store_url = store_href
             stores_prices.append((store_name, price))
@@ -450,7 +451,7 @@ class Scraper:
         """
 
         """
-        # yielding upcs
+        # yielding upcsself.ucp_csv_path
         log_to_file("getting upcs and prices from the API ...")
         len_items = self.get_items()
         if len_items:
@@ -507,6 +508,8 @@ class Scraper:
                     target = np.abs(np.min([np.mean(scraped_prices), np.median(scraped_prices)]))
                     diff_perc = np.abs(round(target / float(price) - 1, 3))
                     diff_amount = np.abs(price - target)
+                    price_min = np.min(scraped_prices)
+                    price_max = np.max(scraped_prices)
                 elif not self.failed:
                     log_to_file(
                         f"Target price and difference price will be inserted as N/A. No prices were scraped.")
@@ -514,10 +517,15 @@ class Scraper:
                     target = 'N/A'
                     diff_perc = 'N/A'
                     diff_amount = 'N/A'
+                    price_min = 'N/A'
+                    price_max = 'N/A'
                 else:
                     log_to_file(
                         f"There was a fatal issue initiating one of the driver. Nothing will be inserted for upc {upc} and scraping will be resumed for another session.")
                     continue
+
+                s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+                                 self.ucp_csv_path)
 
                 with open(self.ucp_csv_path) as inf:
                     reader = csv.reader(inf.readlines())
@@ -535,10 +543,14 @@ class Scraper:
                                 line[5] = round(target, 3)
                                 line[6] = diff_perc
                                 line[7] = round(diff_amount, 3)
+                                line[8] = round(price_min, 2)
+                                line[9] = round(price_max, 2)
                             else:
                                 line[5] = target
                                 line[6] = diff_perc
                                 line[7] = diff_amount
+                                line[8] = price_min
+                                line[9] = price_max
                             writer.writerow(line)
                         else:
                             writer.writerow(line)
@@ -557,11 +569,24 @@ class Scraper:
         log_to_file("Session completed")
         bucket.upload_file("tmp/logs.txt", "data/logs.txt")
         warning_upcs = False
-        # Send notification
-        #send_email(from_=None, to_=None, subject="End of session", text="The session <timestamp> has ended")
-        if warning_upcs:
-            pass
-            #send_email(from_=None, to_=None, subject="Warning", text="Warning for upcs : <>")
+        # Send warning
+        s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+                         self.ucp_csv_path)
+        df_f = pd.read_csv(self.ucp_csv_path)
+        df_warning = df_f[df_f['price_difference_percent'] > config.threshold]
+        if len(df_warning):
+            warning_text = f"Difference percentage bigger than {config.threshold} found for the following upcs:\n" \
+                           f"{tabulate(df_warning[['upc', 'price_difference_percent']], headers='keys', tablefmt='psql')}"
+            send_plain_email(subject=f"[End of Session with WARNING] session : "
+                                     f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
+                             text=warning_text)
+            log_to_file(f"Warning sent : {warning_text}")
+
+        else:
+            send_plain_email(subject=f"[End of Session]"
+                             , text=f"The session {self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
+                                    f" has ended successfully without warnings.")
+            log_to_file(f"End of session email sent : {warning_text}")
 
 
 # app = Flask(__name__)
@@ -582,6 +607,7 @@ def main():
 
 if __name__ == "__main__":
     from utils import send_plain_email
-    #send_plain_email()
+
+    # send_plain_email()
     main()
     # app.run(debug=True, host="0.0.0.0", port=80)
