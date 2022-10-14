@@ -582,6 +582,6 @@ def main():
 
 if __name__ == "__main__":
     from utils import send_plain_email
-    send_plain_email()
-    #main()
+    #send_plain_email()
+    main()
     # app.run(debug=True, host="0.0.0.0", port=80)
