@@ -37,9 +37,6 @@ api_url = config.url
 username = config.username
 password = config.password
 
-# id = config.id.replace('JEB', '')
-# key = config.key.replace('JEB', '')
-
 # call s3 bucket
 s3 = boto3.resource('s3')
 bucket = s3.Bucket(config.BUCKET_NAME)
@@ -113,7 +110,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1: #total:
+            while i <= 1:#total:
                 params = {
                     "page": i
                 }
@@ -256,7 +253,7 @@ class Scraper:
             # print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
             try:
-                stroe_name = el.find_elements(By.XPATH, "./td")[-1].text
+                stroe_name = el.find_elements(By.XPATH, "./td")[-1].text.lower().rstrip().lstrip()
                 store_href = el.find_element(By.XPATH, "./td[1]/a").get_attribute('href')
                 price = el.find_element(By.XPATH, './td[2]').text
                 if price != "MAP":
@@ -270,7 +267,6 @@ class Scraper:
                             f"\nError Traceback:")
                 continue
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
-            store_url = store_href
             stores_prices.append((stroe_name, price))
 
         # close the driver
@@ -360,14 +356,13 @@ class Scraper:
                 store_href = variant_el.find_element(
                     By.XPATH, "./div[1]/a[1]").get_attribute('href')
                 store_name = variant_el.find_element(
-                    By.XPATH, "./div[1]/a[1]/span[@class='variant-store']").text
+                    By.XPATH, "./div[1]/a[1]/span[@class='variant-store']").text.lower().rstrip().lstrip()
             except Exception as e:
                 err = traceback.format_exc()
                 log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
                             f"\nError Traceback: {e}")
                 continue
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
-            store_url = store_href
             stores_prices.append((store_name, price))
 
         # close the driver
@@ -429,14 +424,73 @@ class Scraper:
             try:
                 price = el.get_attribute('data-price')
                 price = float(price.replace('$', '').replace(',', ''))
-                store_href = el.find_element(By.XPATH, './/td[1]/div[1]/a[1]').get_attribute('href')
-                store_name = el.find_element(By.XPATH, './/td[1]/div[1]/a[1]/span').text
+                store_name = el.find_element(By.XPATH, './/td[1]/div[1]/a[1]/span').text.lower().rstrip().lstrip()
             except Exception as e:
                 err = traceback.format_exc()
                 log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
                             f"\nError Traceback: {e}")
                 continue
-            store_url = store_href
+            stores_prices.append((store_name, price))
+
+        # close the driver
+        driver.close()
+        # break
+        log_to_file(f"[{scraper_name}] got the prices : {stores_prices}")
+        # save products for this ucp
+        self.upcs_products += stores_prices
+        log_to_file(f"[{scraper_name}] Finished scraping with {len(stores_prices)} items.")
+
+    def scrape_barcodelookup(self, ucp):
+        """
+        scrape barcodelookup websites
+        """
+        # iterate through all ucps
+        scraper_name = 'barcodelookup'
+        ucp = ucp.replace("'", "")
+        # intiate the driver
+        driver = init_driver()
+        if not driver:
+            log_to_file(f"[{scraper_name}] there was a fatal problem with the chromedriver initialization!")
+            self.failed = True
+            return
+        # get the url
+        url = self.barcodelookup_url + str(ucp)
+        log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
+        try:
+            driver.get(url)
+            print("got gundeals url")
+        except:
+            err = traceback.format_exc()
+            log_to_file(f"There was an issue getting the url : {url}"
+                        f"\nError Traceback: {err}")
+            driver.close()
+            return
+        sleep(random.uniform(1, 2))
+
+        # get products elements
+        try:
+            els = driver.find_elements(By.XPATH, "//div[@class='store-list']/ol/li")
+        except Exception as e:
+            err = traceback.format_exc()
+            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
+                        f"\nError Traceback: {e}")
+            driver.close()
+            return
+
+        # iterate through all shops
+        stores_prices = []
+        print(f"got {len(els)} elements for {scraper_name}")
+        for j, el in enumerate(els):
+            # get the price and store elements
+            try:
+                price = el.find_element(By.XPATH, ".//span[2]")
+                price = float(price.replace('$', '').replace(',', ''))
+                store_name = el.find_element(By.XPATH, './/span[1]').text.lower().rstrip().lstrip()
+            except Exception as e:
+                err = traceback.format_exc()
+                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [{scraper_name}] website."
+                            f"\nError Traceback: {e}")
+                continue
             stores_prices.append((store_name, price))
 
         # close the driver
@@ -503,7 +557,7 @@ class Scraper:
                                    f"data/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
 
                 # print("len : ", len(upcs_products))
-                if not len(upcs_products) == 0:
+                if len(upcs_products) != 0:
                     scraped_prices = list(zip(*upcs_products))[-1]
                     scraped_prices = np.array(scraped_prices, dtype=np.float64)
                     target = np.abs(np.min([np.mean(scraped_prices), np.median(scraped_prices)]))
@@ -575,7 +629,6 @@ class Scraper:
 
         log_to_file("Session completed")
         bucket.upload_file("tmp/logs.txt", "data/logs.txt")
-        warning_upcs = False
         # Send warning
         s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
                          self.ucp_csv_path)
@@ -583,7 +636,7 @@ class Scraper:
         df_warning = df_f[df_f['price_difference_percent'] > config.threshold]
         if len(df_warning):
             warning_text = f"Difference percentage bigger than {config.threshold} found for the following upcs:\n" \
-                           f"{tabulate(df_warning[['upc', 'price_difference_percent']], headers='keys', tablefmt='psql')}"
+                           f"{tabulate(df_warning[['upc', 'price_difference_percent', 'price', 'target_price']], headers='keys', tablefmt='psql')}"
             send_plain_email(subject=f"[End of Session with WARNING] session : "
                                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
                              text=warning_text)
@@ -596,10 +649,6 @@ class Scraper:
             log_to_file(f"End of session email sent : {warning_text}")
 
 
-# app = Flask(__name__)
-
-# nth
-# @app.route("/")
 def main():
     try:
         open("tmp/logs.txt", "w").close()
@@ -615,16 +664,13 @@ def main():
 if __name__ == "__main__":
     from utils import send_plain_email
 
-    open('tmp/timestamps.txt', 'w').close()
+    #open('tmp/timestamps.txt', 'w').close()
     #s3_client = boto3.client("s3")
     #s3_client.download_file(config.BUCKET_NAME, 'layers/timestamps.txt', 'tmp/timestamps.txt')
-    bucket.upload_file('tmp/timestamps.txt', 'layers/timestamps.txt')
+    #bucket.upload_file('tmp/timestamps.txt', 'layers/timestamps.txt')
 
     #r = s3_client.delete_object(Bucket=config.BUCKET_NAME, Key="data/results_2022-09-29_01-51-08.csv")
     #print("deleted : ", r)
 
-
     # send_plain_email()
-
     main()
-    # app.run(debug=True, host="0.0.0.0", port=80)
