@@ -93,10 +93,10 @@ class Scraper:
             if nothing:
                 log_to_file("This is the first scraping session. First csv will be created.")
             else:
-                warning_upcs = latest_df[np.abs(latest_df['price_difference_percent']) > config.threshold][
-                    'upc'].values.tolist()
-                log_to_file(f"Warning for these UPCs : {warning_upcs}")
-                print("Completed.")
+                #warning_upcs = latest_df[np.abs(latest_df['price_difference_percent']) > config.threshold][
+                #    'upc'].values.tolist()
+                #log_to_file(f"Warning for these UPCs : {warning_upcs}")
+                #print("Completed.")
                 log_to_file("All csvs are completed. Creating a new scraping session.")
             now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.ucp_csv_path = f"tmp/results_{now}.csv"
@@ -529,12 +529,15 @@ class Scraper:
                 t1 = Thread(target=self.scrape_gundeals, args=(upc,))
                 t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
+                t4 = Thread(target=self.scrape_barcodelookup, args=upc)
                 t1.start()
                 t2.start()
                 t3.start()
+                t4.start()
                 t1.join()
                 t2.join()
                 t3.join()
+                t4.start()
 
                 # self.scrape_barcodelookup(upc)
                 ###
