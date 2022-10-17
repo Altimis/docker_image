@@ -116,7 +116,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= total:
+            while i <= 1:#total:
                 params = {
                     "page": i
                 }
@@ -435,6 +435,8 @@ class Scraper:
                 log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
                             f"\nError Traceback: {e}")
                 continue
+            if j % 10 == 0:
+                print("inserting element ", j)
             stores_prices.append((store_name, price))
 
         # close the driver
@@ -523,8 +525,8 @@ class Scraper:
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
-            if upc != '792695234166':
-                continue
+            #if upc != '792695234166':
+            #    continue
             log_to_file(f"scraping for upc {upc} and price {price} ...")
             self.upcs_products = []
             # Scraping starts
@@ -652,7 +654,7 @@ class Scraper:
             bucket.upload_file(f"tmp/{warning_df_name}", f"reports/{warning_df_name}")
             warning_text = f"There are {len_df_warning} items " \
                            f"that have a price difference bigger than {config.threshold}.\n " \
-                           f"Report can be found in file named {warning_df_name} under report directory (in S3)."
+                           f"Report can be found in file named {warning_df_name} under reports directory (in S3)."
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
             print("Email sent : ", warning_text)
@@ -662,7 +664,7 @@ class Scraper:
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
             print("Email sent : ", warning_text)
-        send_plain_email(subject=subject, text=warning_text)
+        #send_plain_email(subject=subject, text=warning_text)
         log_to_file(f"Warning sent : {warning_text}")
 
 
