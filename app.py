@@ -663,7 +663,8 @@ class Scraper:
 
 def main():
     try:
-        s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
+        resp = s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
+        print("resp : ", resp)
         #open("tmp/logs.txt", "w").close()
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
