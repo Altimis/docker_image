@@ -114,7 +114,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= total:
+            while i <= 1:#total:
                 params = {
                     "page": i
                 }
@@ -165,7 +165,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    #df = df.sample(frac=0.5)
+                    df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -676,14 +676,14 @@ def main():
 
 if __name__ == "__main__":
     # remove all files in tmp dir
-    """
+
     files = glob.glob('/tmp/*')
     for f in files:
         try:
             os.remove(f)
         except:
             continue
-    """
+
     try:
         s3.meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
     except ClientError:
