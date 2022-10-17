@@ -663,9 +663,11 @@ class Scraper:
 
 def main():
     try:
-        resp = s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
-        print("resp : ", resp)
-        #open("tmp/logs.txt", "w").close()
+        s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
+    except Exception as e:
+        print(e)
+        open("tmp/logs.txt", "w").close()
+    try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
         print("Scraper started")
@@ -692,4 +694,4 @@ if __name__ == "__main__":
         print(f"Bucket {config.BUCKET_NAME_2} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME_2)
     print("Main started")
-    main()
+    print(main())
