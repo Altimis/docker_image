@@ -94,12 +94,14 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
     attempt = 0
     done = False
     driver = None
+    from selenium.webdriver.chrome.options import Options
 
     while not done and attempt < 4:
-        options = uc.ChromeOptions()
+        #options = uc.ChromeOptions()
+        options = Options()
         options.add_argument('--headless')
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        #options.add_argument("--no-sandbox")
+        #options.add_argument("--disable-dev-shm-usage")
         if config.use_proxy:
             proxy_servers = config.proxies
             if proxy_servers and len(proxy_servers):
@@ -108,7 +110,7 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
                 options.add_argument(f"--proxy-server={proxy_server}")
         try:  # will patch to newest Chrome driver version
             driver = uc.Chrome(use_subprocess=True, options=options,
-                               driver_executable_path=config.driver_executable_path)#, driver_executable_path)
+                               executable_path=config.driver_executable_path)#, driver_executable_path)
             done = True
         except:  # newest driver version not matching Chrome version
             err = traceback.format_exc()
