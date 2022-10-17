@@ -711,7 +711,9 @@ def main():
         s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', expanduser("~") + '/docker_image/'+'tmp/logs.txt')
     except Exception as e:
         print(e)
-        open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w").close()
+        f = open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w")
+        f.write("first")
+        f.close()
     try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
@@ -726,8 +728,7 @@ def main():
 if __name__ == "__main__":
     # remove all files in tmp dir
     from os.path import expanduser
-    with open(expanduser("~") + '/docker_image/tmp/HERE.txt', 'w') as f:
-        f.write("Code started")
+
     print("Code started")
     print("Emptying tmp dir")
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
@@ -736,6 +737,8 @@ if __name__ == "__main__":
             os.remove(f)
         except:
             continue
+    with open(expanduser("~") + '/docker_image/tmp/HERE.txt', 'w') as f:
+        f.write("Code started")
     try:
         boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
     except ClientError:
