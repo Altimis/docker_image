@@ -98,7 +98,7 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
     while not done and attempt < 4:
         options = uc.ChromeOptions()
         options.add_argument('--headless')
-        #options.add_argument("--no-sandbox")
+        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         if config.use_proxy:
             proxy_servers = config.proxies
@@ -107,7 +107,7 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
                 print("using proxy_server : ", proxy_server)
                 options.add_argument(f"--proxy-server={proxy_server}")
         try:  # will patch to newest Chrome driver version
-            driver = uc.Chrome(use_subprocess=True, options=options,
+            driver = uc.Chrome(use_subprocess=False, options=options,
                                executable_path=config.driver_executable_path)#, driver_executable_path)
             done = True
         except:  # newest driver version not matching Chrome version
