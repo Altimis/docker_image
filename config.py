@@ -35,3 +35,4 @@ BUCKET_NAME_2 = 'rharms-price-data'
 threshold = 0.05
 email_to = "lennonzamora@ranheimarms.com"
 email_from = "pricegrabber@ranheimarms.com"
+driver_executable_path = '/usr/local/bin/chromedriver'

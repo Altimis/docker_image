@@ -164,7 +164,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    #df = df.sample(frac=0.5)
+                    df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -551,7 +551,7 @@ class Scraper:
                 # self.scrape_gunengine(upc, product_type)
                 ###
 
-                log_to_file("Scraping 3 websites finished")
+                #log_to_file("Scraping 3 websites finished")
                 log_to_file("Checking duplicates")
                 upcs_products = remove_duplicates(upc, self.upcs_products)
 
