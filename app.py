@@ -62,13 +62,13 @@ class Scraper:
     def get_items(self):
         # read the file
         try:
-            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
+            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', expanduser("~") + '/docker_image/'+'tmp/timestamps.txt')
         except:
-            open('tmp/timestamps.txt', 'w').close()
+            open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'w').close()
 
-        os.chmod('tmp/timestamps.txt', 0o777)
+        os.chmod(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 0o777)
 
-        with open('tmp/timestamps.txt', 'r') as f:
+        with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'r') as f:
             lines = f.readline()
             lines = lines.split('/n')
             lines = [line.rstrip() for line in lines if line]
@@ -78,8 +78,8 @@ class Scraper:
             latest_timestamp = max(timestamps)
             print("latest csv : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
             s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
-                             f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
-            latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+                             expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            latest_df = pd.read_csv(expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             target_prices = latest_df.target_price.values.tolist()
             # print("target price : ", target_prices)
             price_difference_percents = latest_df.price_difference_percent.values.tolist()
@@ -102,9 +102,9 @@ class Scraper:
                 #print("Completed.")
                 log_to_file("All csvs are completed. Creating a new scraping session.")
             now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-            self.ucp_csv_path = f"tmp/results_{now}.csv"
+            self.ucp_csv_path = expanduser("~") + '/docker_image/'+f"tmp/results_{now}.csv"
         else:
-            self.ucp_csv_path = f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+            self.ucp_csv_path = expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
                         f"is not completed. Resuming scraping.")
             return
@@ -186,11 +186,11 @@ class Scraper:
                     log_to_file(f'Error getting data' + str(response.json()))
 
             # write the time to file
-            with open('tmp/timestamps.txt', 'a') as f:
+            with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as f:
                 f.write(now)
                 f.write('/n')
 
-            bucket.upload_file('tmp/timestamps.txt', 'utils/timestamps.txt')
+            bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
 
         except Exception as e:
             print(e)
@@ -559,11 +559,11 @@ class Scraper:
 
                 json_upcs_products[upc.replace("'", '')] = [l for l in upcs_products]
 
-                with open(f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
+                with open(expanduser("~") + '/docker_image/'+f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                           'w') as outfile:
                     json.dump(json_upcs_products, outfile)
 
-                bucket.upload_file(f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
+                bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                                    f"prices/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
 
                 # print("len : ", len(upcs_products))
@@ -635,20 +635,20 @@ class Scraper:
                 er = traceback.format_exc()
                 log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
-            bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
+            bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
             with open(expanduser("~") + '/docker_image/tmp/'+upc+'.txt', 'w') as f:
                 f.write(upc)
 
         #############################
 
         try:
-            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
+            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', expanduser("~") + '/docker_image/'+'tmp/timestamps.txt')
         except:
-            open('tmp/timestamps.txt', 'w').close()
+            open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'w').close()
 
-        os.chmod('tmp/timestamps.txt', 0o777)
+        os.chmod(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 0o777)
 
-        with open('tmp/timestamps.txt', 'r') as f:
+        with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'r') as f:
             lines = f.readline()
             lines = lines.split('/n')
             lines = [line.rstrip() for line in lines if line]
@@ -658,8 +658,8 @@ class Scraper:
             latest_timestamp = max(timestamps)
             print("latest csv : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
             s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
-                             f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
-            latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+                             expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            latest_df = pd.read_csv(expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             target_prices = latest_df.target_price.values.tolist()
             # print("target price : ", target_prices)
             price_difference_percents = latest_df.price_difference_percent.values.tolist()
@@ -676,7 +676,7 @@ class Scraper:
 
         if is_completed:
             log_to_file("Session completed")
-        bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
+        bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
         # Send warning
         s3.download_file(config.BUCKET_NAME, 'prices/' + self.ucp_csv_path.split('/')[-1],
                          self.ucp_csv_path)
@@ -687,8 +687,8 @@ class Scraper:
 
         if len_df_warning > 0:
             df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
-            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
-            bucket.upload_file(f"tmp/{warning_df_name}", f"reports/{warning_df_name}")
+            df_warning_to_save.to_csv(expanduser("~") + '/docker_image/'+f"tmp/{warning_df_name}")
+            bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/{warning_df_name}", f"reports/{warning_df_name}")
             warning_text = f"There are {len_df_warning} items " \
                            f"that have a price difference bigger than {config.threshold}.\n " \
                            f"Report can be found in file named {warning_df_name} under reports directory (in S3)."
@@ -708,10 +708,10 @@ class Scraper:
 
 def main():
     try:
-        s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
+        s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', expanduser("~") + '/docker_image/'+'tmp/logs.txt')
     except Exception as e:
         print(e)
-        open("tmp/logs.txt", "w").close()
+        open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w").close()
     try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
@@ -730,7 +730,7 @@ if __name__ == "__main__":
         f.write("Code started")
     print("Code started")
     print("Emptying tmp dir")
-    files = glob.glob('tmp/*')
+    files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
     for f in files:
         try:
             os.remove(f)
