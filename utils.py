@@ -99,7 +99,7 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
     while not done and attempt < 4:
         options = uc.ChromeOptions()
         #options = Options()
-        #options.add_argument('--headless')
+        options.add_argument('--headless')
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.binary_location = '/usr/bin/google-chrome'
