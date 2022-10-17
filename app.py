@@ -229,7 +229,9 @@ class Scraper:
         url = self.wikiarms_url + cat_name + '?q=' + str(ucp)
         log_to_file(f"[{scraper_name}] Getting products with UCP : {ucp} : {url}")
         try:
+            print("getting url")
             driver.get(url)
+            print("got url")
         except:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
@@ -243,6 +245,7 @@ class Scraper:
         # get products elements
         try:
             els = driver.find_elements(By.XPATH, "//div[@id='products-table']/table/tbody/tr")
+            print("got els")
         except Exception as e:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"

@@ -100,8 +100,8 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
         #options = uc.ChromeOptions()
         options = Options()
         options.add_argument('--headless')
-        #options.add_argument("--no-sandbox")
-        #options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         if config.use_proxy:
             proxy_servers = config.proxies
             if proxy_servers and len(proxy_servers):
