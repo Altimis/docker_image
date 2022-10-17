@@ -725,7 +725,8 @@ def main():
 
 if __name__ == "__main__":
     # remove all files in tmp dir
-    with open('tmp/started.txt', 'w') as f:
+    from os.path import expanduser
+    with open(expanduser("~") + '/docker_image/tmp/HERE.txt', 'w') as f:
         f.write("Code started")
     print("Code started")
     print("Emptying tmp dir")
