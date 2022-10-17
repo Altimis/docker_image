@@ -116,7 +116,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1:#total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -655,12 +655,13 @@ class Scraper:
                            f"Report can be found in file named {warning_df_name} under report directory (in S3)."
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
+            print("Email sent : ", warning_text)
         else:
             warning_text = f"There are 0 items " \
                            f"that have a price difference bigger than {config.threshold}."
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
-
+            print("Email sent : ", warning_text)
         send_plain_email(subject=subject, text=warning_text)
         log_to_file(f"Warning sent : {warning_text}")
 
