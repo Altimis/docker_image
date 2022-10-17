@@ -42,9 +42,8 @@ username = config.username
 password = config.password
 
 # call s3 bucket
-s3 = boto3.resource('s3')
-bucket = s3.Bucket(config.BUCKET_NAME)
-
+bucket = boto3.resource('s3').Bucket(config.BUCKET_NAME)
+s3 = boto3.client('s3')
 
 class Scraper:
     def __init__(self, barcodelookup_url, gunengine_url, gundeals_url, wikiarms_url):
@@ -61,8 +60,6 @@ class Scraper:
 
     # main function that sends data to the cloud via API
     def get_items(self):
-        s3 = boto3.client('s3')
-
         # read the file
         try:
             s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
@@ -512,7 +509,7 @@ class Scraper:
 
         """
         # yielding upcsself.ucp_csv_path
-        s3 = boto3.client('s3')
+        #s3 = boto3.client('s3')
         log_to_file("getting upcs and prices from the API ...")
         len_items = self.get_items()
         if len_items:
