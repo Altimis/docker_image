@@ -107,7 +107,7 @@ def init_driver(is_proxy=False, proxy=None, proxy_server=None):
                 print("using proxy_server : ", proxy_server)
                 options.add_argument(f"--proxy-server={proxy_server}")
         try:  # will patch to newest Chrome driver version
-            driver = uc.Chrome(options=options, driver_executable_path=config.driver_executable_path)
+            driver = uc.Chrome(options=options)#, driver_executable_path=config.driver_executable_path)
             done = True
         except Exception as e:  # newest driver version not matching Chrome version
             err = traceback.format_exc()
