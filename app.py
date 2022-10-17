@@ -1,4 +1,6 @@
 import boto3
+from botocore.client import ClientError
+
 import re
 import pandas as pd
 import os
@@ -63,7 +65,7 @@ class Scraper:
 
         # read the file
 
-        s3.download_file(config.BUCKET_NAME, 'layers/timestamps.txt', 'tmp/timestamps.txt')
+        s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
 
         os.chmod('tmp/timestamps.txt', 0o777)
 
@@ -76,7 +78,7 @@ class Scraper:
             timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
             latest_timestamp = max(timestamps)
             print("latest df : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
-            s3.download_file(config.BUCKET_NAME, f"data/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
+            s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
                              f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             target_prices = latest_df.target_price.values.tolist()
@@ -179,7 +181,7 @@ class Scraper:
                         for line in reversed(reader):  # reverse order
                             writer.writerow(line)
                     # upload file from tmp to s3 key
-                    bucket.upload_file(self.ucp_csv_path, 'data/' + self.ucp_csv_path.split('/')[-1])
+                    bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
 
                 else:
                     log_to_file(f'Error getting data' + str(response.json()))
@@ -189,7 +191,7 @@ class Scraper:
                 f.write(now)
                 f.write('/n')
 
-            bucket.upload_file('tmp/timestamps.txt', 'layers/timestamps.txt')
+            bucket.upload_file('tmp/timestamps.txt', 'utils/timestamps.txt')
 
         except Exception as e:
             print(e)
@@ -557,7 +559,7 @@ class Scraper:
                     json.dump(json_upcs_products, outfile)
 
                 bucket.upload_file(f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
-                                   f"data/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
+                                   f"prices/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
 
                 # print("len : ", len(upcs_products))
                 if len(upcs_products) != 0:
@@ -582,7 +584,7 @@ class Scraper:
                         f"There was a fatal issue initiating one of the driver. Nothing will be inserted for upc {upc} and scraping will be resumed for another session.")
                     continue
                 #s3 = boto3.client('s3')
-                s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+                s3.download_file(config.BUCKET_NAME, 'prices/' + self.ucp_csv_path.split('/')[-1],
                                  self.ucp_csv_path)
 
                 with open(self.ucp_csv_path) as inf:
@@ -620,58 +622,49 @@ class Scraper:
                             writer.writerow(line)
                     writer.writerows(reader)
 
-                bucket.upload_file(self.ucp_csv_path, 'data/' + self.ucp_csv_path.split('/')[-1])
+                bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
                 log_to_file(
                     f"Finished processing upc {upc} with target price : {target} and difference percentage : {diff_perc}")
 
-            except Exception as e:
+            except:
                 er = traceback.format_exc()
                 log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
-            bucket.upload_file("tmp/logs.txt", "data/logs.txt")
+            bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
 
         log_to_file("Session completed")
-        bucket.upload_file("tmp/logs.txt", "data/logs.txt")
+        bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
         # Send warning
-        s3.download_file(config.BUCKET_NAME, 'data/' + self.ucp_csv_path.split('/')[-1],
+        s3.download_file(config.BUCKET_NAME, 'prices/' + self.ucp_csv_path.split('/')[-1],
                          self.ucp_csv_path)
         df_f = pd.read_csv(self.ucp_csv_path)
         df_warning = df_f[df_f['price_difference_percent'] > config.threshold]
         len_df_warning = len(df_warning)
         warning_df_name = self.ucp_csv_path.split('/')[-1].replace('results', 'warning')
-        if 0 < len_df_warning <= 200:
-            df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
-            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
-            bucket.upload_file(f"tmp/{warning_df_name}", f"data/{warning_df_name}")
-            warning_text = f"{len_df_warning} prices with difference percentage bigger than {config.threshold} " \
-                           f"found for the following upcs:\n" \
-                           f"{tabulate(df_warning_to_save, headers='keys', tablefmt='psql')}"
-            send_plain_email(subject=f"[End of Session with WARNING] session : "
-                                     f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
-                             text=warning_text)
-            log_to_file(f"Warning sent : {warning_text}")
-        elif len_df_warning > 200:
-            df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
-            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
-            bucket.upload_file(f"tmp/{warning_df_name}", f"data/{warning_df_name}")
-            warning_text = f"{len_df_warning} prices with difference percentage bigger than {config.threshold} " \
-                           f"found. You can find the csv related to these prices in the main S3 bucket with the name:" \
-                           f" {warning_df_name}"
-            send_plain_email(subject=f"[End of Session with WARNING] session : "
-                                     f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}",
-                             text=warning_text)
-            log_to_file(f"Warning sent : {warning_text}")
 
+        if len_df_warning > 0:
+            df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
+            df_warning_to_save.to_csv(f"tmp/{warning_df_name}")
+            bucket.upload_file(f"tmp/{warning_df_name}", f"reports/{warning_df_name}")
+            warning_text = f"There are {len_df_warning} items " \
+                           f"that have a price difference bigger than {config.threshold}.\n " \
+                           f"Report can be found in file named {warning_df_name} under report directory (in S3)."
+            subject = f"Ranheim Arms Price Scraper Report - End of session " \
+                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
         else:
-            send_plain_email(subject=f"[End of Session]"
-                             , text=f"The session {self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
-                                    f" has ended successfully without warnings.")
-            log_to_file(f"End of session email sent : {warning_text}")
+            warning_text = f"There are 0 items " \
+                           f"that have a price difference bigger than {config.threshold}."
+            subject = f"Ranheim Arms Price Scraper Report - End of session " \
+                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
+
+        send_plain_email(subject=subject, text=warning_text)
+        log_to_file(f"Warning sent : {warning_text}")
 
 
 def main():
     try:
-        open("tmp/logs.txt", "w").close()
+        s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', 'tmp/logs.txt')
+        #open("tmp/logs.txt", "w").close()
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
         scraper.scrape_all()
@@ -683,10 +676,17 @@ def main():
 
 if __name__ == "__main__":
     # remove all files in tmp dir
+    """
     files = glob.glob('/tmp/*')
     for f in files:
         try:
             os.remove(f)
         except:
             continue
+    """
+    try:
+        s3.meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
+    except ClientError:
+        print(f"Bucket {config.BUCKET_NAME_2} doesn't exist. Creating it..")
+        s3.create_bucket(Bucket=config.BUCKET_NAME_2)
     main()

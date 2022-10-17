@@ -31,6 +31,7 @@ gundeals_url = 'https://gun.deals/search/apachesolr_search/'
 wikiarms_url = 'https://www.wikiarms.com/'
 is_proxy = False
 BUCKET_NAME = 'gunsdata'
+BUCKET_NAME_2 = 'rharms-price-data'
 threshold = 0.05
 email_to = "lennonzamora@ranheimarms.com"
 email_from = "pricegrabber@ranheimarms.com"
