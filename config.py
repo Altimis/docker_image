@@ -3,7 +3,7 @@ token = "BBFF-9WF3RcoEaPSlKpxA0OL3iEUflkwTAk"
 url = "https://app.ammoreadycloud.com/api/v2/catalog"
 username = "22070587344825"
 password = "rR0akovE9ooliDbq6LJXqifGPuRCqnLxytxtUBOf"
-use_proxy = True
+use_proxy = False
 #proxies = ['216.162.209.41:49155', "185.33.85.114:49155", '68.67.198.95:49155']
 proxies =  ['138.36.92.50:49155',
             '216.162.209.193:49155',
