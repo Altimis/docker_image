@@ -419,7 +419,7 @@ class Scraper:
 
         # iterate through all shops
         stores_prices = []
-        print(f"got {len(els)} elements for gundeals")
+        log_to_file(f"[{scraper_name}] got {len(els)} elements")
         for j, el in enumerate(els):
             # print(f"[{scraper_name}] getting element {j}")
             # get the price and store elements
@@ -523,6 +523,8 @@ class Scraper:
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
+            if upc != '792695234166':
+                continue
             log_to_file(f"scraping for upc {upc} and price {price} ...")
             self.upcs_products = []
             # Scraping starts
