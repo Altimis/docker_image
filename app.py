@@ -76,7 +76,7 @@ class Scraper:
         if lines:
             timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
             latest_timestamp = max(timestamps)
-            print("latest df : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
+            print("latest csv : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
             s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
                              f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
@@ -164,7 +164,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    df = df.sample(frac=0.5)
+                    #df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
