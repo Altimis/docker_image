@@ -635,7 +635,43 @@ class Scraper:
                 # print("A major problem occured in one of the scrapers : " + str(e))
             bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
 
-        log_to_file("Session completed")
+        #############################
+
+        try:
+            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
+        except:
+            open('tmp/timestamps.txt', 'w').close()
+
+        os.chmod('tmp/timestamps.txt', 0o777)
+
+        with open('tmp/timestamps.txt', 'r') as f:
+            lines = f.readline()
+            lines = lines.split('/n')
+            lines = [line.rstrip() for line in lines if line]
+
+        if lines:
+            timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
+            latest_timestamp = max(timestamps)
+            print("latest csv : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
+            s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
+                             f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            latest_df = pd.read_csv(f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            target_prices = latest_df.target_price.values.tolist()
+            # print("target price : ", target_prices)
+            price_difference_percents = latest_df.price_difference_percent.values.tolist()
+            price_difference_amounts = latest_df.price_difference_amount.values.tolist()
+            is_completed = all(
+                (not math.isnan(el1) or not math.isnan(el2) or not math.isnan(el3)) for el1, el2, el3 in zip(
+                    target_prices, price_difference_percents, price_difference_amounts))
+            nothing = False
+        else:
+            nothing = True
+            is_completed = True
+
+        #####################
+
+        if is_completed:
+            log_to_file("Session completed")
         bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
         # Send warning
         s3.download_file(config.BUCKET_NAME, 'prices/' + self.ucp_csv_path.split('/')[-1],
@@ -661,8 +697,9 @@ class Scraper:
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
             #print("Email sent : ", warning_text)
-        #send_plain_email(subject=subject, text=warning_text)
-        log_to_file(f"Warning sent : {warning_text}")
+        if is_completed:
+            #send_plain_email(subject=subject, text=warning_text)
+            log_to_file(f"Warning sent : {warning_text}")
 
 
 def main():
