@@ -636,7 +636,7 @@ class Scraper:
                 log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
             bucket.upload_file("tmp/logs.txt", "logs/logs.txt")
-            with open('tmp/'+upc+'.txt', 'w') as f:
+            with open(expanduser("~") + '/docker_image/tmp/'+upc+'.txt', 'w') as f:
                 f.write(upc)
 
         #############################
