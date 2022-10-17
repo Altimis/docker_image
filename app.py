@@ -64,8 +64,10 @@ class Scraper:
         s3 = boto3.client('s3')
 
         # read the file
-
-        s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
+        try:
+            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', 'tmp/timestamps.txt')
+        except:
+            open('tmp/timestamps.txt', 'w').close()
 
         os.chmod('tmp/timestamps.txt', 0o777)
 
