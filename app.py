@@ -667,6 +667,7 @@ def main():
         #open("tmp/logs.txt", "w").close()
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
+        print("Scraper started")
         scraper.scrape_all()
 
         return "Execution Succeeded : 200"
@@ -676,17 +677,18 @@ def main():
 
 if __name__ == "__main__":
     # remove all files in tmp dir
-
-    files = glob.glob('/tmp/*')
+    print("Code started")
+    print("Emptying tmp dir")
+    files = glob.glob('tmp/*')
     for f in files:
         try:
             os.remove(f)
         except:
             continue
-
     try:
         s3.meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
     except ClientError:
         print(f"Bucket {config.BUCKET_NAME_2} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME_2)
+    print("Main started")
     main()
