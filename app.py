@@ -693,7 +693,7 @@ if __name__ == "__main__":
         except:
             continue
     try:
-        s3.meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
+        boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
     except ClientError:
         print(f"Bucket {config.BUCKET_NAME_2} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME_2)
