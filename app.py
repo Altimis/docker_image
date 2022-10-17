@@ -113,7 +113,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 1:#total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -522,8 +522,8 @@ class Scraper:
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
-            #if upc != '792695234166':
-            #    continue
+            if upc != '792695234166':
+                continue
             log_to_file(f"scraping for upc {upc} and price {price} ...")
             self.upcs_products = []
             # Scraping starts
@@ -660,7 +660,7 @@ class Scraper:
                            f"that have a price difference bigger than {config.threshold}."
             subject = f"Ranheim Arms Price Scraper Report - End of session " \
                       f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
-            print("Email sent : ", warning_text)
+            #print("Email sent : ", warning_text)
         #send_plain_email(subject=subject, text=warning_text)
         log_to_file(f"Warning sent : {warning_text}")
 
