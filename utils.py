@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 import random
 import traceback
 from time import sleep
-
+from os.path import expanduser
 from threading import Thread
 
 import emails
@@ -85,7 +85,7 @@ def pad_upc(upc):
 
 def log_to_file(string):
     logging.info(string)
-    with open("tmp/logs.txt", "a") as f:
+    with open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "a") as f:
         f.write(string + '/n')
 
 

@@ -1,7 +1,7 @@
 import boto3
 from botocore.client import ClientError
 import logging
-
+from os.path import expanduser
 import re
 import pandas as pd
 import os
@@ -736,7 +736,6 @@ def main():
 
 if __name__ == "__main__":
     # remove all files in tmp dir
-    from os.path import expanduser
 
     print("Code started")
     print("Emptying tmp dir")
