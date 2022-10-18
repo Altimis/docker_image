@@ -1,5 +1,6 @@
 import boto3
 from botocore.client import ClientError
+import logging
 
 import re
 import pandas as pd
@@ -27,6 +28,10 @@ import requests
 from datetime import datetime as dt
 
 import warnings
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(message)s')
+
+
 
 # from waitress import serve
 

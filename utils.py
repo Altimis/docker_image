@@ -14,6 +14,7 @@ from time import sleep
 from threading import Thread
 
 import emails
+import logging
 
 import csv
 import json
@@ -23,6 +24,8 @@ import requests
 from datetime import datetime as dt
 
 import warnings
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s:%(message)s')
 
 
 def send_plain_email(subject, text):
@@ -81,7 +84,7 @@ def pad_upc(upc):
 
 
 def log_to_file(string):
-    print(string)
+    logging.info(string)
     with open("tmp/logs.txt", "a") as f:
         f.write(string + '/n')
 
