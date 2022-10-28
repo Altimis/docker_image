@@ -20,10 +20,14 @@ from time import sleep
 from tabulate import tabulate
 from threading import Thread
 
+from pyvirtualdisplay import Display
+
 import csv
 import json
 
 import requests
+
+import tracemalloc
 
 from datetime import datetime as dt
 
@@ -249,7 +253,7 @@ class Scraper:
         try:
             els = driver.find_elements(By.XPATH, "//div[@id='products-table']/table/tbody/tr")
             print("got els")
-        except Exception as e:
+        except Exception:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
                         f"\nError Traceback: ")
@@ -263,7 +267,6 @@ class Scraper:
             # get the price and store elements
             try:
                 stroe_name = el.find_elements(By.XPATH, "./td")[-1].text.lower().rstrip().lstrip()
-                store_href = el.find_element(By.XPATH, "./td[1]/a").get_attribute('href')
                 price = el.find_element(By.XPATH, './td[2]').text
                 if price != "MAP":
                     price = float(price.replace('$', '').replace(',', ''))
@@ -362,8 +365,6 @@ class Scraper:
             try:
                 price = float(variant_el.find_element(
                     By.XPATH, "./div[1]/a[1]/span[@class='variant-price ']").text.replace('$', '').replace(',', ''))
-                store_href = variant_el.find_element(
-                    By.XPATH, "./div[1]/a[1]").get_attribute('href')
                 store_name = variant_el.find_element(
                     By.XPATH, "./div[1]/a[1]/span[@class='variant-store']").text.lower().rstrip().lstrip()
             except Exception as e:
@@ -528,6 +529,7 @@ class Scraper:
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
+            logging.info(f"Memory : {tracemalloc.get_traced_memory()}")
             #if upc != "'792695234166'":
             #    continue
             log_to_file(f"scraping for upc {upc} and price {price} ...")
@@ -672,9 +674,7 @@ class Scraper:
             is_completed = all(
                 (not math.isnan(el1) or not math.isnan(el2) or not math.isnan(el3)) for el1, el2, el3 in zip(
                     target_prices, price_difference_percents, price_difference_amounts))
-            nothing = False
         else:
-            nothing = True
             is_completed = True
 
         #####################
@@ -697,14 +697,10 @@ class Scraper:
             warning_text = f"There are {len_df_warning} items " \
                            f"that have a price difference bigger than {config.threshold}.\n " \
                            f"Report can be found in file named {warning_df_name} under reports directory (in S3)."
-            subject = f"Ranheim Arms Price Scraper Report - End of session " \
-                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
             print("Email sent : ", warning_text)
         else:
             warning_text = f"There are 0 items " \
                            f"that have a price difference bigger than {config.threshold}."
-            subject = f"Ranheim Arms Price Scraper Report - End of session " \
-                      f"{self.ucp_csv_path.split('/')[-1].split('.')[0].split('results')[-1]}"
             #print("Email sent : ", warning_text)
         if is_completed:
             #send_plain_email(subject=subject, text=warning_text)
@@ -721,7 +717,7 @@ def main():
     except Exception as e:
         print(e)
         f = open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w")
-        f.write("first")
+        f.write("first\n")
         f.close()
     try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
@@ -737,6 +733,9 @@ def main():
 if __name__ == "__main__":
     # remove all files in tmp dir
 
+    display = Display(visible=0, size=(1024, 768))
+    display.start()
+
     print("Code started")
     print("Emptying tmp dir")
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
@@ -748,9 +747,10 @@ if __name__ == "__main__":
     with open(expanduser("~") + '/docker_image/tmp/HERE.txt', 'w') as f:
         f.write("Code started")
     try:
-        boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME_2)
+        print(f"Checking if bucket exists...")
+        boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME)
     except ClientError:
-        print(f"Bucket {config.BUCKET_NAME_2} doesn't exist. Creating it..")
-        s3.create_bucket(Bucket=config.BUCKET_NAME_2)
+        print(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
+        s3.create_bucket(Bucket=config.BUCKET_NAME)
     print("Main started")
     print(main())

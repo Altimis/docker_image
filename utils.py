@@ -21,6 +21,8 @@ import json
 
 import requests
 
+import contextlib
+
 from datetime import datetime as dt
 
 import warnings
@@ -86,40 +88,33 @@ def pad_upc(upc):
 def log_to_file(string):
     logging.info(string)
     with open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "a") as f:
-        f.write(string + '/n')
+        f.write(string + '\n')
 
 
-def init_driver(is_proxy=False, proxy=None, proxy_server=None):
+@contextlib.contextmanager
+def init_driver():
     """
     initiate the undetected chrome driver
     """
     # intitate the driver instance with options and chrome version
-    attempt = 0
-    done = False
-    driver = None
-    #from selenium.webdriver.chrome.options import Options
-
-    while not done and attempt < 4:
-        options = uc.ChromeOptions()
-        #options = Options()
-        options.add_argument('--headless')
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.binary_location = '/usr/bin/google-chrome'
-        if config.use_proxy:
-            proxy_servers = config.proxies
-            if proxy_servers and len(proxy_servers):
-                proxy_server = random.choice(proxy_servers)
-                print("using proxy_server : ", proxy_server)
-                options.add_argument(f"--proxy-server={proxy_server}")
-        try:  # will patch to newest Chrome driver version
-            driver = uc.Chrome(options=options,  driver_executable_path=config.driver_executable_path)
-                              # driver_executable_path=config.driver_executable_path)#, driver_executable_path)
-            done = True
-        except:  # newest driver version not matching Chrome version
-            err = traceback.format_exc()
-            print("ERR initiating driver: ", err)
-            attempt += 1
+    options = uc.ChromeOptions()
+    #options = Options()
+    #options.add_argument('--headless')
+    #options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    if config.use_proxy:
+        proxy_servers = config.proxies
+        if proxy_servers and len(proxy_servers):
+            proxy_server = random.choice(proxy_servers)
+            print("using proxy_server : ", proxy_server)
+            options.add_argument(f"--proxy-server={proxy_server}")
+    try:  # will patch to newest Chrome driver version
+        driver = uc.Chrome(options=options,  driver_executable_path=config.driver_executable_path,
+                           browser_executable_path=config.binary_location)
+    except:  # newest driver version not matching Chrome version
+        err = traceback.format_exc()
+        print("ERR initiating driver: ", err)
+        driver = None
 
     return driver
 
