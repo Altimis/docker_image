@@ -99,7 +99,7 @@ def init_driver():
     # intitate the driver instance with options and chrome version
     options = uc.ChromeOptions()
     #options = Options()
-    #options.add_argument('--headless')
+    options.add_argument('--headless')
     #options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     if config.use_proxy:
