@@ -736,21 +736,22 @@ if __name__ == "__main__":
     display = Display(visible=0, size=(1024, 768))
     display.start()
 
-    print("Code started")
-    print("Emptying tmp dir")
+    log_to_file("Code started")
+    log_to_file("Emptying tmp dir")
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
     for f in files:
         try:
-            os.remove(f)
+            continue
+            #os.remove(f)
         except:
             continue
-    with open(expanduser("~") + '/docker_image/tmp/HERE.txt', 'w') as f:
-        f.write("Code started")
+    with open(expanduser("~") + '/HERE.txt', 'w') as f:
+        now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+        f.write(f"Code started\n{now}")
     try:
-        print(f"Checking if bucket exists...")
+        log_to_file(f"Checking if bucket exists...")
         boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME)
     except ClientError:
-        print(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
+        log_to_file(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME)
-    print("Main started")
     print(main())
