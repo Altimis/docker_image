@@ -79,7 +79,7 @@ class Scraper:
 
         with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'r') as f:
             lines = f.readline()
-            lines = lines.split('/n')
+            lines = lines.split('\n')
             lines = [line.rstrip() for line in lines if line]
 
         if lines:
@@ -197,7 +197,7 @@ class Scraper:
             # write the time to file
             with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as f:
                 f.write(now)
-                f.write('/n')
+                f.write('\n')
 
             bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
 
@@ -657,7 +657,7 @@ class Scraper:
 
         with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'r') as f:
             lines = f.readline()
-            lines = lines.split('/n')
+            lines = lines.split('\n')
             lines = [line.rstrip() for line in lines if line]
 
         if lines:
@@ -722,12 +722,11 @@ def main():
     try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,
                           gundeals_url=config.gundeals_url, wikiarms_url=config.wikiarms_url)
-        print("Scraper started")
+        log_to_file("Scraper started")
         scraper.scrape_all()
 
-        return "Execution Succeeded : 200"
     except Exception as e:
-        return f"Execution failed: {e}"
+        log_to_file(f"Execution failed: {e}")
 
 
 if __name__ == "__main__":
@@ -754,4 +753,4 @@ if __name__ == "__main__":
     except ClientError:
         log_to_file(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME)
-    print(main())
+    main()
