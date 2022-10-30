@@ -717,7 +717,7 @@ def main():
     except Exception as e:
         print(e)
         f = open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w")
-        f.write("first")
+        f.write("first\n")
         f.close()
     try:
         scraper = Scraper(barcodelookup_url=config.barcodelookup_url, gunengine_url=config.gunengine_url,

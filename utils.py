@@ -88,7 +88,7 @@ def pad_upc(upc):
 def log_to_file(string):
     logging.info(string)
     with open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "a") as f:
-        f.write(string + '/n')
+        f.write(string + '\n')
 
 
 @contextlib.contextmanager
