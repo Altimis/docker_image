@@ -735,8 +735,8 @@ if __name__ == "__main__":
     #display = Display(visible=0, size=(1024, 768))
     #display.start()
 
-    log_to_file("Code started")
-    log_to_file("Emptying tmp dir")
+    print("Code started")
+    print("Emptying tmp dir")
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
     for f in files:
         try:
@@ -748,9 +748,9 @@ if __name__ == "__main__":
         now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         f.write(f"Code started\n{now}")
     try:
-        log_to_file(f"Checking if bucket exists...")
+        print(f"Checking if bucket exists...")
         boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME)
     except ClientError:
-        log_to_file(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
+        print(f"Bucket {config.BUCKET_NAME} doesn't exist. Creating it..")
         s3.create_bucket(Bucket=config.BUCKET_NAME)
     main()
