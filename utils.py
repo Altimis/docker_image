@@ -91,7 +91,7 @@ def log_to_file(string):
         f.write(string + '\n')
 
 
-@contextlib.contextmanager
+#@contextlib.contextmanager
 def init_driver():
     """
     initiate the undetected chrome driver
