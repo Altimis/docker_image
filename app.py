@@ -120,7 +120,7 @@ class Scraper:
         try:
             i = 1
             total = 1
-            while i <= 20: #total:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -640,8 +640,8 @@ class Scraper:
                 log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
             bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
-            with open(expanduser("~") + '/docker_image/tmp/'+upc+'.txt', 'w') as f:
-                f.write(upc)
+            #with open(expanduser("~") + '/docker_image/tmp/'+upc+'.txt', 'w') as f:
+            #    f.write(upc)
 
         #############################
 
@@ -732,10 +732,6 @@ if __name__ == "__main__":
     display = Display(visible=0, size=(1024, 768))
     display.start()
 
-    f = open(expanduser("~") + '/docker_image/' + "HERE.txt", "w")
-    f.write("first\n")
-    f.close()
-
     print("Code started")
     print("Emptying tmp dir")
 
@@ -743,13 +739,9 @@ if __name__ == "__main__":
     for f in files:
         try:
             continue
-            #os.remove(f)
+            os.remove(f)
         except:
             continue
-    
-    with open(expanduser("~") + '/HERE.txt', 'w') as f:
-        now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
-        f.write(f"Code started\n{now}")
 
     try:
         print(f"Checking if bucket exists...")
