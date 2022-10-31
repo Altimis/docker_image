@@ -27,8 +27,6 @@ import json
 
 import requests
 
-import tracemalloc
-
 from datetime import datetime as dt
 
 import warnings
@@ -529,7 +527,6 @@ class Scraper:
         json_upcs_products = {}
 
         for upc, price, product_type in upcs_prices_generator:
-            logging.info(f"Memory : {tracemalloc.get_traced_memory()}")
             #if upc != "'792695234166'":
             #    continue
             log_to_file(f"scraping for upc {upc} and price {price} ...")
