@@ -735,8 +735,13 @@ if __name__ == "__main__":
     #display = Display(visible=0, size=(1024, 768))
     #display.start()
 
+    f = open(expanduser("~") + '/docker_image/' + "HERE.txt", "w")
+    f.write("first\n")
+    f.close()
+
     print("Code started")
     print("Emptying tmp dir")
+    """
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
     for f in files:
         try:
@@ -744,9 +749,11 @@ if __name__ == "__main__":
             #os.remove(f)
         except:
             continue
+    
     with open(expanduser("~") + '/HERE.txt', 'w') as f:
         now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
         f.write(f"Code started\n{now}")
+    """
     try:
         print(f"Checking if bucket exists...")
         boto3.resource('s3').meta.client.head_bucket(Bucket=config.BUCKET_NAME)
