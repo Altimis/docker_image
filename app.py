@@ -83,6 +83,7 @@ class Scraper:
         if lines:
             timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
             latest_timestamp = max(timestamps)
+            log_to_file(f"All timestamps : {[timestamp.strftime('%Y-%m-%d_%H-%M-%S') for timestamp in timestamps]}")
             log_to_file(f"Latest csv : {latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}")
             latest_df_name = f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             s3.download_file(config.BUCKET_NAME, latest_df_name,
@@ -119,9 +120,11 @@ class Scraper:
             return
 
         to_return = []
+        log_to_file(f"Getting data from API ...")
         try:
             i = 1
             total = 1
+            j = 0
             while i <= total:
                 params = {
                     "page": i
@@ -160,6 +163,9 @@ class Scraper:
                         row['product_type'] = product_type
                         # print("category name : ", category_name)
                         to_return.append(row)
+                        if j % 100:
+                            j += 1
+                            log_to_file(f"Got {i} items from the API")
                     total = int(response.json()['pages'])
                     # print("pages left : ", total - i)
                     i += 1
@@ -196,10 +202,10 @@ class Scraper:
 
             # write the time to file
             with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as f:
-                f.write(now)
-                f.write('\n')
+                f.write(now + '\n')
 
             bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
+            log_to_file("Uploaded timestamps file to S3")
 
         except Exception as e:
             print(e)
