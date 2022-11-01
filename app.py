@@ -83,12 +83,14 @@ class Scraper:
         if lines:
             timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
             latest_timestamp = max(timestamps)
-            print("latest csv : ", latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S'))
-            s3.download_file(config.BUCKET_NAME, f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv",
+            log_to_file(f"Latest csv : {latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}")
+            latest_df_name = f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+            s3.download_file(config.BUCKET_NAME, latest_df_name,
                              expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
+            os.chmod(expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv", 0o777)
+            log_to_file(f'Latest df downloaded : {latest_df_name}')
             latest_df = pd.read_csv(expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv")
             target_prices = latest_df.target_price.values.tolist()
-            # print("target price : ", target_prices)
             price_difference_percents = latest_df.price_difference_percent.values.tolist()
             price_difference_amounts = latest_df.price_difference_amount.values.tolist()
             is_completed = all(
