@@ -708,7 +708,7 @@ def main():
     try:
         s3.download_file(config.BUCKET_NAME, 'logs/logs.txt', expanduser("~") + '/docker_image/'+'tmp/logs.txt')
         f = open(expanduser("~") + '/docker_image/' + "tmp/logs.txt", "w")
-        f.write("first")
+        f.write("first\n")
         f.close()
         bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/logs.txt', 'logs/logs.txt')
     except Exception as e:
@@ -738,7 +738,7 @@ if __name__ == "__main__":
     files = glob.glob(expanduser("~") + '/docker_image/'+'tmp/*')
     for f in files:
         try:
-            continue
+            #continue
             os.remove(f)
         except:
             continue

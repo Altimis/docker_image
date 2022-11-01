@@ -86,9 +86,10 @@ def pad_upc(upc):
 
 
 def log_to_file(string):
-    logging.info(string)
+    #logging.info(string)
+    now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
     with open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "a") as f:
-        f.write(string + '\n')
+        f.write('[' + now + ']' + ' : ' + string + '\n')
 
 
 #@contextlib.contextmanager
