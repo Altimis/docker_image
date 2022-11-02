@@ -69,7 +69,8 @@ class Scraper:
     def get_items(self):
         # read the file
         try:
-            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', expanduser("~") + '/docker_image/'+'tmp/timestamps.txt')
+            s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', expanduser("~") +
+                             '/docker_image/'+'tmp/timestamps.txt')
         except:
             open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'w').close()
 
@@ -114,7 +115,8 @@ class Scraper:
             now = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
             self.ucp_csv_path = expanduser("~") + '/docker_image/'+f"tmp/results_{now}.csv"
         else:
-            self.ucp_csv_path = expanduser("~") + '/docker_image/'+f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+            self.ucp_csv_path = expanduser("~") + '/docker_image/'+\
+                                f"tmp/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             log_to_file(f"The file results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv "
                         f"is not completed. Resuming scraping.")
             return
@@ -125,7 +127,7 @@ class Scraper:
             i = 1
             total = 1
             j = 0
-            while i <= total:
+            while i <= 5:
                 params = {
                     "page": i
                 }
@@ -163,7 +165,7 @@ class Scraper:
                         row['product_type'] = product_type
                         # print("category name : ", category_name)
                         to_return.append(row)
-                        if j % 100:
+                        if j % 100 == 0:
                             j += 1
                             log_to_file(f"Got {j} items from the API")
                     total = int(response.json()['pages'])
@@ -204,8 +206,8 @@ class Scraper:
                     log_to_file(f'Error getting data' + str(response.json()))
 
             # write the time to file
-            with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as f:
-                f.write(now + '\n')
+            with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as file:
+                file.write(now + '\n')
             try:
                 bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
             except:
