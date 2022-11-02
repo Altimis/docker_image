@@ -761,8 +761,8 @@ def main():
 if __name__ == "__main__":
     # remove all files in tmp dir
 
-    display = Display(visible=0, size=(1024, 768))
-    display.start()
+    #display = Display(visible=0, size=(1024, 768))
+    #display.start()
 
     print("Code started")
     print("Emptying tmp dir")
