@@ -165,7 +165,7 @@ class Scraper:
                         to_return.append(row)
                         if j % 100:
                             j += 1
-                            log_to_file(f"Got {i} items from the API")
+                            log_to_file(f"Got {j} items from the API")
                     total = int(response.json()['pages'])
                     # print("pages left : ", total - i)
                     i += 1
@@ -195,7 +195,10 @@ class Scraper:
                         for line in reversed(reader):  # reverse order
                             writer.writerow(line)
                     # upload file from tmp to s3 key
-                    bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
+                    try:
+                        bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
+                    except:
+                        log_to_file("Couldn't upload csv")
 
                 else:
                     log_to_file(f'Error getting data' + str(response.json()))
@@ -203,8 +206,10 @@ class Scraper:
             # write the time to file
             with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'a') as f:
                 f.write(now + '\n')
-
-            bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
+            try:
+                bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'utils/timestamps.txt')
+            except:
+                log_to_file("Couldn't upload timestamps.txt")
             log_to_file("Uploaded timestamps file to S3")
 
         except Exception as e:
@@ -574,9 +579,11 @@ class Scraper:
                 with open(expanduser("~") + '/docker_image/'+f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                           'w') as outfile:
                     json.dump(json_upcs_products, outfile)
-
-                bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
+                try:
+                    bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json",
                                    f"prices/json_upcs_prices_{self.ucp_csv_path.split('/')[-1].split('.')[0]}.json")
+                except:
+                    log_to_file("Couldn't upload json")
 
                 # print("len : ", len(upcs_products))
                 if len(upcs_products) != 0:
@@ -638,8 +645,10 @@ class Scraper:
                         else:
                             writer.writerow(line)
                     writer.writerows(reader)
-
-                bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
+                try:
+                    bucket.upload_file(self.ucp_csv_path, 'prices/' + self.ucp_csv_path.split('/')[-1])
+                except:
+                    log_to_file("Couldn't upload csv")
                 log_to_file(
                     f"Finished processing upc {upc} with target price : {target} and difference percentage : {diff_perc}")
 
@@ -647,7 +656,10 @@ class Scraper:
                 er = traceback.format_exc()
                 log_to_file("A major problem occured in one of the scrapers : " + str(er))
                 # print("A major problem occured in one of the scrapers : " + str(e))
-            bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
+            try:
+                bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
+            except:
+                log_to_file("Couldn't upload logs")
             #with open(expanduser("~") + '/docker_image/tmp/'+upc+'.txt', 'w') as f:
             #    f.write(upc)
 
@@ -686,7 +698,10 @@ class Scraper:
 
         if is_completed:
             log_to_file("Session completed")
-        bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
+        try:
+            bucket.upload_file(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "logs/logs.txt")
+        except:
+            log_to_file("Couldn't upload logs")
         # Send warning
         s3.download_file(config.BUCKET_NAME, 'prices/' + self.ucp_csv_path.split('/')[-1],
                          self.ucp_csv_path)
@@ -698,7 +713,11 @@ class Scraper:
         if len_df_warning > 0:
             df_warning_to_save = df_warning[['upc', 'price_difference_percent', 'price', 'target_price']]
             df_warning_to_save.to_csv(expanduser("~") + '/docker_image/'+f"tmp/{warning_df_name}")
-            bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/{warning_df_name}", f"reports/{warning_df_name}")
+            try:
+                bucket.upload_file(expanduser("~") + '/docker_image/'+f"tmp/{warning_df_name}",
+                                   f"reports/{warning_df_name}")
+            except:
+                log_to_file("Couldn't upload report")
             warning_text = f"There are {len_df_warning} items " \
                            f"that have a price difference bigger than {config.threshold}.\n " \
                            f"Report can be found in file named {warning_df_name} under reports directory (in S3)."
@@ -718,7 +737,10 @@ def main():
         f = open(expanduser("~") + '/docker_image/' + "tmp/logs.txt", "w")
         f.write("first\n")
         f.close()
-        bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/logs.txt', 'logs/logs.txt')
+        try:
+            bucket.upload_file(expanduser("~") + '/docker_image/'+'tmp/logs.txt', 'logs/logs.txt')
+        except:
+            log_to_file("Couldn't upload logs")
     except Exception as e:
         print(e)
         f = open(expanduser("~") + '/docker_image/'+"tmp/logs.txt", "w")
