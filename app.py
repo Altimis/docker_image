@@ -71,20 +71,21 @@ class Scraper:
         try:
             s3.download_file(config.BUCKET_NAME, 'utils/timestamps.txt', expanduser("~") +
                              '/docker_image/'+'tmp/timestamps.txt')
+            log_to_file(f"timestamps found in s3")
         except:
             open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'w').close()
+            log_to_file(f"timestamps not found in s3")
 
         os.chmod(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 0o777)
 
         with open(expanduser("~") + '/docker_image/'+'tmp/timestamps.txt', 'r') as f:
-            lines = f.readline()
-            lines = lines.split('\n')
+            lines = f.readlines()
             lines = [line.rstrip() for line in lines if line]
 
         if lines:
             timestamps = [dt.strptime(line, '%Y-%m-%d_%H-%M-%S') for line in lines]
             latest_timestamp = max(timestamps)
-            log_to_file(f"All timestamps : {[timestamp.strftime('%Y-%m-%d_%H-%M-%S') for timestamp in timestamps]}")
+            log_to_file(f"number of saved timestamps : {len([timestamp.strftime('%Y-%m-%d_%H-%M-%S') for timestamp in timestamps])}")
             log_to_file(f"Latest csv : {latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}")
             latest_df_name = f"prices/results_{latest_timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
             s3.download_file(config.BUCKET_NAME, latest_df_name,
@@ -127,7 +128,7 @@ class Scraper:
             i = 1
             total = 1
             j = 0
-            while i <= 5:
+            while i <= total:
                 params = {
                     "page": i
                 }
@@ -181,7 +182,7 @@ class Scraper:
                     df['price_min'] = ''
                     df['price_max'] = ''
 
-                    #df = df.sample(frac=0.5)
+                    # df = df.sample(frac=0.5)
 
                     # print(self.ucp_csv_path)
 
@@ -265,7 +266,6 @@ class Scraper:
         # get products elements
         try:
             els = driver.find_elements(By.XPATH, "//div[@id='products-table']/table/tbody/tr")
-            print("got els")
         except Exception:
             err = ""  # traceback.format_exc()
             log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
@@ -330,8 +330,7 @@ class Scraper:
             driver.get(url)
         except:
             err = traceback.format_exc()
-            log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}"
-                        f"\nError Traceback: ")
+            log_to_file(f"[{scraper_name}] There was an issue getting the url : {url}")
             driver.close()
             return
         sleep(random.uniform(0.5, 1))
@@ -366,8 +365,7 @@ class Scraper:
             variant_els = driver.find_elements(By.XPATH, "//div[@class='variant']")
         except Exception as e:
             err = traceback.format_exc()
-            log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}"
-                        f"\nError Traceback:")
+            log_to_file(f"[{scraper_name}] There was an issue pulling [all products] with the ucp {ucp}")
             driver.close()
             return
         # iterate through all shops
@@ -382,8 +380,7 @@ class Scraper:
                     By.XPATH, "./div[1]/a[1]/span[@class='variant-store']").text.lower().rstrip().lstrip()
             except Exception as e:
                 err = traceback.format_exc()
-                log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}"
-                            f"\nError Traceback: ")
+                log_to_file(f"[{scraper_name}] There was an issue pulling [a product] with the ucp {ucp}")
                 continue
             # self.log_to_file(f"price : {price}, store_url : {store_url}")
             stores_prices.append((store_name, price))
@@ -429,8 +426,7 @@ class Scraper:
             els = driver.find_elements(By.XPATH, "//table[@id='price-compare-table']/tbody/tr")
         except Exception as e:
             err = traceback.format_exc()
-            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
-                        f"\nError Traceback: {e}")
+            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website.")
             driver.close()
             return
 
@@ -449,11 +445,10 @@ class Scraper:
                 store_name = el.find_element(By.XPATH, './/td[1]/div[1]/a[1]/span').text.lower().rstrip().lstrip()
             except Exception as e:
                 err = traceback.format_exc()
-                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website."
-                            f"\nError Traceback: {e}")
+                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [gundeals] website.")
                 continue
-            if j % 10 == 0:
-                print("inserting element ", j)
+            # if j % 10 == 0:
+                # print("inserting element ", j)
             stores_prices.append((store_name, price))
 
         # close the driver
@@ -484,8 +479,7 @@ class Scraper:
             driver.get(url)
         except:
             err = traceback.format_exc()
-            log_to_file(f"There was an issue getting the url : {url}"
-                        f"\nError Traceback: {err}")
+            log_to_file(f"There was an issue getting the url : {url}")
             driver.close()
             return
         sleep(random.uniform(1, 2))
@@ -495,8 +489,7 @@ class Scraper:
             els = driver.find_elements(By.XPATH, "//div[@class='store-list']/ol/li")
         except Exception as e:
             err = traceback.format_exc()
-            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website."
-                        f"\nError Traceback: {e}")
+            log_to_file(f"There was an issue pulling [all products] with the ucp {ucp} from [gundeals] website.")
             driver.close()
             return
 
@@ -511,8 +504,7 @@ class Scraper:
                 store_name = el.find_element(By.XPATH, './/span[1]').text.lower().rstrip().lstrip()
             except Exception as e:
                 err = traceback.format_exc()
-                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [{scraper_name}] website."
-                            f"\nError Traceback: {e}")
+                log_to_file(f"There was an issue pulling [a product] with the ucp {ucp} from [{scraper_name}] website.")
                 continue
             stores_prices.append((store_name, price))
 
@@ -723,7 +715,7 @@ class Scraper:
             warning_text = f"There are {len_df_warning} items " \
                            f"that have a price difference bigger than {config.threshold}.\n " \
                            f"Report can be found in file named {warning_df_name} under reports directory (in S3)."
-            print("Email sent : ", warning_text)
+            #print("Email sent : ", warning_text)
         else:
             warning_text = f"There are 0 items " \
                            f"that have a price difference bigger than {config.threshold}."
@@ -761,8 +753,8 @@ def main():
 if __name__ == "__main__":
     # remove all files in tmp dir
 
-    #display = Display(visible=0, size=(1024, 768))
-    #display.start()
+    display = Display(visible=0, size=(1024, 768))
+    display.start()
 
     print("Code started")
     print("Emptying tmp dir")
