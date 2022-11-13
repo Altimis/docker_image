@@ -82,7 +82,7 @@ class ProxyExtension:
     """
 
     def __init__(self, host, port, user, password):
-        self._dir = config.user_data_dir #os.path.normpath(tempfile.mkdtemp())
+        self._dir = expanduser("~") + '/docker_image/' + config.user_data_dir
 
         manifest_file = os.path.join(self._dir, "manifest.json")
         with open(manifest_file, mode="w") as f:
