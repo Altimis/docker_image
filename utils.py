@@ -171,6 +171,8 @@ def init_driver():
     #options.add_argument('--headless')
     #options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    prefs = {"profile.managed_default_content_settings.images": 2}
+    options.add_experimental_option("prefs", prefs)
     if config.use_proxy:
         proxy_servers = config.proxies
         if proxy_servers and len(proxy_servers):
