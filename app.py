@@ -227,6 +227,7 @@ class Scraper:
         # iterate through all ucps
         # for ucp in self.ucps:
         scraper_name = 'wikiarms'
+        log_to_file(f"Scraping {ucp} with {scraper_name} started")
         cat_names = {
             'guns': ['Handgun', 'Long Gun'],
             'ammo': ['Ammunition'],
@@ -303,7 +304,7 @@ class Scraper:
 
     def scrape_gunengine(self, ucp, product_type):
         scraper_name = 'gunengine'
-        log_to_file(f"Scraping {upc} with {scraper_name} started")
+        log_to_file(f"Scraping {ucp} with {scraper_name} started")
         cat_names = {
             'guns': ['Handgun', 'Long Gun'],
             'ammo': ['Ammunition'],
@@ -399,7 +400,7 @@ class Scraper:
         """
         # iterate through all ucps
         scraper_name = 'gundeals'
-        log_to_file(f"Scraping {upc} with {scraper_name} started")
+        log_to_file(f"Scraping {ucp} with {scraper_name} started")
         ucp = ucp.replace("'", "")
         stores_prices = []
         # intiate the driver
