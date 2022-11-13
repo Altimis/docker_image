@@ -38,5 +38,5 @@ email_from = "pricegrabber@ranheimarms.com"
 driver_executable_path = '/usr/local/bin/chromedriver'
 binary_location = '/usr/bin/google-chrome'
 
-proxy_rot = ("proxy.packetstream.io", 31111, "XXXXXXX", "XXXXXXXXXXXX")
+proxy_rot = ("proxy.packetstream.io", 31111, "rharms2020", "PdULYl7AGrs77gY9")
 user_data_dir = 'tmp'

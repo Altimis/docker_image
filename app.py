@@ -303,6 +303,7 @@ class Scraper:
 
     def scrape_gunengine(self, ucp, product_type):
         scraper_name = 'gunengine'
+        log_to_file(f"Scraping {upc} with {scraper_name} started")
         cat_names = {
             'guns': ['Handgun', 'Long Gun'],
             'ammo': ['Ammunition'],
@@ -398,6 +399,7 @@ class Scraper:
         """
         # iterate through all ucps
         scraper_name = 'gundeals'
+        log_to_file(f"Scraping {upc} with {scraper_name} started")
         ucp = ucp.replace("'", "")
         stores_prices = []
         # intiate the driver
@@ -465,6 +467,7 @@ class Scraper:
         """
         # iterate through all ucps
         scraper_name = 'barcodelookup'
+        log_to_file(f"Scraping {upc} with {scraper_name} started")
         ucp = ucp.replace("'", "")
         # intiate the driver
         driver = init_driver()
@@ -542,7 +545,6 @@ class Scraper:
             log_to_file("Scraping 3 websites started")
             # self.scrape_gundeals(ucp = upc)
             try:
-
                 t1 = Thread(target=self.scrape_gundeals, args=(upc,))
                 t2 = Thread(target=self.scrape_gunengine, args=(upc, product_type))
                 t3 = Thread(target=self.scrape_wikiarms, args=(upc, product_type))
@@ -555,7 +557,6 @@ class Scraper:
                 t2.join()
                 t3.join()
                 #t4.join()
-
 
                 # self.scrape_barcodelookup(upc)
                 ###
